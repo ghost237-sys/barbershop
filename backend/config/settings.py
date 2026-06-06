@@ -18,7 +18,7 @@ CSRF_TRUSTED_ORIGINS = config(
 ).split(',')
 
 INSTALLED_APPS = [
-    'corheaders',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
