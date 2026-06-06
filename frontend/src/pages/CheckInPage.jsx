@@ -56,6 +56,13 @@ export default function CheckInPage() {
     setCheckInData(null)
   }
 
+  const handleRequeue = (newToken) => {
+  // Replace the stored token with the new entry's token
+  localStorage.setItem(STORAGE_KEY, newToken)
+  setToken(newToken)
+  setCheckInData(null)  // clear stale check-in data, WebSocket will populate
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-900 flex items-center justify-center">
@@ -86,6 +93,7 @@ export default function CheckInPage() {
             token={token}
             checkInData={checkInData}
             onLeave={handleLeaveQueue}
+            onRequeue={handleRequeue}  
           />
         )}
 

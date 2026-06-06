@@ -39,7 +39,7 @@ const STATUS_CONFIG = {
 
 
 
-export default function WaitRoom({ token, checkInData, onLeave }) {
+export default function WaitRoom({ token, checkInData, onLeave, onRequeue }) {
   const { entryData, connected, usingFallback } = useEntrySocket(token)
 
   // Use WebSocket data if available, otherwise fall back to initial check-in response
@@ -57,6 +57,16 @@ export default function WaitRoom({ token, checkInData, onLeave }) {
     return () => clearTimeout(timer)
     }
   }, [entry?.status])
+
+  useEffect(() => {
+  if (!entry) return
+
+  // If this entry was marked no_show and has a replacement entry,
+  // automatically switch the wait room to track the new entry
+  if (entry.status === 'no_show' && entry.requeued_as_token) {
+    onRequeue?.(entry.requeued_as_token)
+  }
+}, [entry?.status, entry?.requeued_as_token])
 
   if (!entry) {
     return <LoadingSpinner message="Connecting to queue..." />
