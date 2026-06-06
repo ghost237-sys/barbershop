@@ -12,6 +12,7 @@ ALLOWED_HOSTS = config(
     default='*'
 ).split(',')
 
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     'https://barbershop-production-4c89.up.railway.app'
