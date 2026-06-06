@@ -22,7 +22,10 @@ export default function BarberSelector({ selectedId, onSelect }) {
 
   useEffect(() => {
     getBarbers()
-      .then(setBarbers)
+      .then(data => {
+	    console.log('Barbers API response:',data)
+      setBarbers(data)
+	})
       .catch(() => setError('Could not load barbers. Please try again.'))
       .finally(() => setLoading(false))
   }, [])
