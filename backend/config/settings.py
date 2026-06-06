@@ -12,10 +12,10 @@ ALLOWED_HOSTS = config(
     default='*'
 ).split(',')
 
-CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS',
-    default=''
-).split(',')
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://barbershop-production-4c89.up.railway.app'
+]
 
 INSTALLED_APPS = [
     'corsheaders',
