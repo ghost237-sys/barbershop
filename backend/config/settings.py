@@ -18,6 +18,7 @@ CSRF_TRUSTED_ORIGINS = config(
 ).split(',')
 
 INSTALLED_APPS = [
+    'corheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -30,6 +31,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # serves static files
     'django.contrib.sessions.middleware.SessionMiddleware',
