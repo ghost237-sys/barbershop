@@ -30,14 +30,21 @@ export default function CheckInForm({ onSuccess }) {
       })
       // Pass the token and response data up to the page
       onSuccess(result)
-    } catch (err) {
-      const msg = err.response?.data?.error
-        || err.response?.data?.non_field_errors?.[0]
-        || 'Something went wrong. Please try again.'
-      setError(msg)
-    } finally {
-      setLoading(false)
-    }
+
+    }catch (err) {
+  // 503 means all barbers are off duty
+  if (err.response?.status === 503) {
+    setError(
+      'The shop is currently closed — all barbers are off duty. ' +
+      'Please come back later. / Duka limefungwa kwa sasa.'
+    )
+  } else {
+    const msg = err.response?.data?.error
+      || err.response?.data?.non_field_errors?.[0]
+      || 'Something went wrong. Please try again.'
+    setError(msg)
+  }
+}
   }
 
   return (

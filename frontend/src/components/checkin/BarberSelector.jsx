@@ -1,6 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { getBarbers } from '../../api/queue'
 import LoadingSpinner from '../shared/LoadingSpinner'
+
+
+
+function SlowStartMessage() {
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShow(true), 4000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (!show) return null
+
+  return (
+    <p className="text-zinc-600 text-xs text-center max-w-xs">
+      Taking a moment to wake up the server...
+      <br />Itachukua sekunde chache.
+    </p>
+  )
+}
 
 // Status pill colours
 const STATUS_STYLES = {
@@ -30,7 +50,18 @@ export default function BarberSelector({ selectedId, onSelect }) {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <LoadingSpinner message="Loading barbers..." />
+  if (loading) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-8">
+      <div className="w-10 h-10 border-4 border-zinc-700 border-t-amber-400
+                      rounded-full animate-spin" />
+      <p className="text-zinc-400 text-sm text-center">Loading barbers...</p>
+      {/* Show this message after 4 seconds so user knows it's a slow start */}
+      <SlowStartMessage />
+    </div>
+  )
+}
+
   if (error)   return <p className="text-red-400 text-sm text-center">{error}</p>
 
   return (
