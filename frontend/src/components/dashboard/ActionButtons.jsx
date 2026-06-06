@@ -4,7 +4,23 @@ import { useState } from 'react'
  * The 3 core barber actions.
  * Each button shows a loading state while the API call is in flight.
  * Confirmation is required for Off Duty (destructive — redistributes queue).
+ * 
  */
+
+const pendingRef = useRef(false)  // instant lock, faster than state
+
+const handleAction = async (action, fn) => {
+  if (pendingRef.current) return  // block if already in flight
+  pendingRef.current = true
+  setLoadingAction(action)
+  try {
+    await fn()
+  } finally {
+    setLoadingAction(null)
+    pendingRef.current = false
+  }
+}
+
 export default function ActionButtons({
   barberId,
   hasCurrentCustomer,
