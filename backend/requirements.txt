@@ -36,7 +36,7 @@ PyJWT==2.13.0
 pyOpenSSL==26.2.0
 python-decouple==3.8
 qrcode==8.2
-redis==8.0.0
+
 requests==2.34.2
 requests-oauthlib==2.0.0
 service-identity==26.1.0
