@@ -7,7 +7,7 @@ import { useState, useRef } from 'react'
  * 
  */
 
-const pendingRef = useRef(false)  // instant lock, faster than state
+ // instant lock, faster than state
 
 const handleAction = async (action, fn) => {
   if (pendingRef.current) return  // block if already in flight
@@ -30,6 +30,7 @@ export default function ActionButtons({
   onOffDuty,
   onOnDuty,
 }) {
+  const pendingRef = useRef(false) 
   const [loadingAction, setLoadingAction] = useState(null)
   const [confirmOffDuty, setConfirmOffDuty] = useState(false)
 

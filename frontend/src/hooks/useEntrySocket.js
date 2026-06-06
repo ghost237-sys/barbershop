@@ -16,6 +16,7 @@ export function useEntrySocket(token) {
   const timeoutRef = useRef(null)
   const fallbackRef = useRef(null)
   const reconnectRef = useRef(null)
+  const reconnectAttemptsRef = useRef(0)  // ← tracks backoff attempts
 
   const fetchViaHttp = useCallback(async () => {
     if (!token) return
@@ -42,13 +43,20 @@ export function useEntrySocket(token) {
     setUsingFallback(false)
   }, [])
 
+  const clearSilenceTimer = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }, [])
+
   const resetSilenceTimer = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    clearSilenceTimer()
     timeoutRef.current = setTimeout(() => {
       console.warn('[Entry WS] Silent for 5s — switching to HTTP fallback')
       startFallbackPolling()
     }, WS_TIMEOUT_MS)
-  }, [startFallbackPolling])
+  }, [clearSilenceTimer, startFallbackPolling])
 
   const connect = useCallback(() => {
     if (!token) return
@@ -61,8 +69,10 @@ export function useEntrySocket(token) {
     const ws = new WebSocket(`${WS_BASE}/ws/entry/${token}/`)
     wsRef.current = ws
 
+    // ── onopen: reset backoff counter on successful connection ──
     ws.onopen = () => {
       setConnected(true)
+      reconnectAttemptsRef.current = 0  // reset backoff on success
       stopFallbackPolling()
       resetSilenceTimer()
     }
@@ -79,20 +89,36 @@ export function useEntrySocket(token) {
       }
     }
 
+    ws.onerror = () => {
+      console.warn('[Entry WS] Error occurred')
+    }
+
+    // ── onclose: exponential backoff reconnection ──
     ws.onclose = () => {
       setConnected(false)
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      clearSilenceTimer()
+
       startFallbackPolling()
-      reconnectRef.current = setTimeout(() => connect(), 3000)
+
+      // Backoff: 3s → 6s → 12s → 24s → capped at 30s
+      const attempts = reconnectAttemptsRef.current
+      const delay = Math.min(3000 * Math.pow(2, attempts), 30000)
+      reconnectAttemptsRef.current += 1
+
+      console.log(`[Entry WS] Reconnecting in ${delay / 1000}s (attempt ${attempts + 1})`)
+
+      reconnectRef.current = setTimeout(() => {
+        connect()
+      }, delay)
     }
-  }, [token, stopFallbackPolling, resetSilenceTimer, startFallbackPolling])
+  }, [token, stopFallbackPolling, resetSilenceTimer, startFallbackPolling, clearSilenceTimer])
 
   useEffect(() => {
     if (token) connect()
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-      if (fallbackRef.current) clearInterval(fallbackRef.current)
+      clearSilenceTimer()
+      stopFallbackPolling()
       if (reconnectRef.current) clearTimeout(reconnectRef.current)
       if (wsRef.current) {
         wsRef.current.onclose = null
