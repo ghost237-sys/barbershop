@@ -41,6 +41,34 @@ def get_next_waiting_entry(barber):
 
 
 def handle_no_show(entry):
+    entry.no_show_count += 1
+
+    if entry.no_show_count >= 2:
+        entry.status = 'cancelled'
+        entry.save()
+        return None
+
+    entry.status = 'no_show'
+    # Don't save yet — we'll save after linking
+
+    new_entry = QueueEntry.objects.create(
+        customer_name=entry.customer_name,
+        customer_phone=entry.customer_phone,
+        barber=entry.barber,
+        preference=entry.preference,
+        status='waiting',
+        sms_sent_second_in_line=False,
+        sms_sent_your_turn=False,
+    )
+
+    # Link old entry to new one so the wait room can follow
+    entry.requeued_as = new_entry
+    entry.save()
+
+    from .sms import send_requeued_sms
+    send_requeued_sms(new_entry)
+
+    return new_entry
     """
     When a barber marks a customer as no-show:
     1. Mark the entry as no_show

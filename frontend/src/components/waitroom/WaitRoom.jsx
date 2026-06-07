@@ -47,16 +47,34 @@ export default function WaitRoom({ token, checkInData, onLeave, onRequeue }) {
   const config = entry ? STATUS_CONFIG[entry.status] : null
 
   // Add this inside WaitRoom, after the useEntrySocket line:
-  useEffect(() => {
-    if (!entry) return
-    if (['completed', 'cancelled', 'no_show'].includes(entry.status)) {
-    // Give them 5 seconds to read the final message, then clear the token
+  // Watches for terminal statuses — clears token and returns to check-in
+useEffect(() => {
+  if (!entry) return
+
+  // no_show is only terminal if there's no replacement entry
+  // If requeued_as_token exists, the requeue useEffect handles it instead
+  const isTerminal = (
+    (entry.status === 'completed') ||
+    (entry.status === 'cancelled') ||
+    (entry.status === 'no_show' && !entry.requeued_as_token)
+  )
+
+  if (isTerminal) {
     const timer = setTimeout(() => {
       onLeave?.()
     }, 5000)
     return () => clearTimeout(timer)
-    }
-  }, [entry?.status])
+  }
+}, [entry?.status, entry?.requeued_as_token])
+
+// Watches for re-queue — switches to new token immediately
+useEffect(() => {
+  if (!entry) return
+  if (entry.status === 'no_show' && entry.requeued_as_token) {
+    onRequeue?.(entry.requeued_as_token)
+  }
+}, [entry?.status, entry?.requeued_as_token])
+
 
   useEffect(() => {
   if (!entry) return

@@ -30,12 +30,11 @@ class BarberSerializer(serializers.ModelSerializer):
 
 
 class QueueEntrySerializer(serializers.ModelSerializer):
-    """
-    Full queue entry — used in queue status view and wait room.
-    """
     barber_name = serializers.CharField(source='barber.name', read_only=True)
     queue_position = serializers.IntegerField(read_only=True)
     estimated_wait_minutes = serializers.IntegerField(read_only=True)
+    # New field — the token of the replacement entry if this one was a no-show
+    requeued_as_token = serializers.SerializerMethodField()
 
     class Meta:
         model = QueueEntry
@@ -45,7 +44,13 @@ class QueueEntrySerializer(serializers.ModelSerializer):
             'status', 'queue_position', 'estimated_wait_minutes',
             'checked_in_at', 'called_at', 'service_started_at',
             'sms_sent_second_in_line', 'sms_sent_your_turn',
+            'requeued_as_token',  # ← add this
         ]
+
+    def get_requeued_as_token(self, obj):
+        if obj.requeued_as:
+            return str(obj.requeued_as.token)
+        return None
 
 
 class CheckInSerializer(serializers.Serializer):

@@ -164,6 +164,14 @@ class QueueEntry(models.Model):
     # How many times this entry has been skipped due to no-show
     no_show_count = models.PositiveIntegerField(default=0)
 
+    requeued_as = models.OneToOneField(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='requeued_from',
+        )
+
     class Meta:
         ordering = ['checked_in_at']  # FIFO by default
 

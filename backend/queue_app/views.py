@@ -2,6 +2,7 @@ from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.db import transaction
 
 from .models import Barber, QueueEntry
 from .serializers import BarberSerializer, QueueEntrySerializer, CheckInSerializer
@@ -206,6 +207,21 @@ class NextCustomerView(APIView):
     5. Check if the new 2nd-in-line needs an SMS
     6. Broadcast update
     """
+    def post(self, request, barber_id):
+        try:
+            barber = Barber.objects.get(id=barber_id)
+        except Barber.DoesNotExist:
+            return Response({'error': 'Barber not found.'}, status=404)
+        
+    # ── Guard: if no one is waiting and no one in service, nothing to do ──
+        has_activity = (
+            barber.current_customer is not None or
+            QueueEntry.objects.filter(barber=barber, status='waiting').exists()
+            )
+        if not has_activity:
+            return Response({'message': 'Queue is empty. You are now available.'})
+    
+
 
     def post(self, request, barber_id):
         try:
@@ -268,19 +284,9 @@ class NextCustomerView(APIView):
 # BARBER DASHBOARD: No Show
 # ---------------------------------------------------------------------------
 
+
+
 class NoShowView(APIView):
-    """
-    POST /api/barber/<id>/noshow/
-    Barber marks the current customer as a no-show.
-
-    What happens:
-    1. Current in_service entry → marked no_show
-    2. If first offence: re-queued at back of line
-    3. If second offence: cancelled entirely
-    4. Next customer automatically moves up
-    5. Broadcast update
-    """
-
     def post(self, request, barber_id):
         try:
             barber = Barber.objects.get(id=barber_id)
@@ -303,7 +309,8 @@ class NoShowView(APIView):
         if not next_entry:
             barber.status = 'available'
             barber.save()
-            broadcast_queue_update()
+            # Broadcast after commit so new entry is visible
+            transaction.on_commit(broadcast_queue_update)
             return Response({
                 'message': f"{current.customer_name} marked as no-show. Queue is now empty.",
                 'requeued': new_entry is not None,
@@ -332,11 +339,14 @@ class NoShowView(APIView):
         if new_second:
             check_and_send_position_sms(new_second)
 
-        broadcast_queue_update()
-	    # Notify affected customers
+        # Broadcast after commit so re-queued entry is visible
+        transaction.on_commit(broadcast_queue_update)
+
+        # Notify affected customers via their private channels
         broadcast_entry(current.token)
-        if next_entry:
-            broadcast_entry(next_entry.token)
+        if new_entry:
+            broadcast_entry(new_entry.token)
+        broadcast_entry(next_entry.token)
 
         return Response({
             'message': (
@@ -373,6 +383,14 @@ class OffDutyView(APIView):
         if barber.status == 'off_duty':
             return Response({'message': 'Already off duty.'})
 
+        # Complete the current in_service customer before going off duty
+        current = barber.current_customer
+        if current:
+            current.status = 'completed'
+            current.service_ended_at = timezone.now()
+            current.save()
+            broadcast_entry(current.token)
+
         barber.status = 'off_duty'
         barber.went_off_duty_at = timezone.now()
         barber.save()
@@ -380,13 +398,12 @@ class OffDutyView(APIView):
         # Redistribute waiting customers
         reassigned = reassign_barbers_queue(barber)
 
-        broadcast_queue_update()
+        transaction.on_commit(broadcast_queue_update)
 
         return Response({
             'message': f"{barber.name} is now off duty.",
             'customers_reassigned': len(reassigned),
         })
-
 
 # ---------------------------------------------------------------------------
 # BARBER DASHBOARD: Back On Duty
