@@ -17,15 +17,21 @@ export default function QRPage() {
         - Remove backgrounds and shadows
       */}
       <style>{`
-        @media print {
-          body { background: white !important; }
-          .no-print { display: none !important; }
-          .print-card {
-            box-shadow: none !important;
-            border: none !important;
-          }
-        }
-      `}</style>
+      @media print {
+      body { background: white !important; }
+      .no-print { display: none !important; }
+      .print-card {
+      box-shadow: none !important;
+      border: none !important;
+      }
+      @page {
+      margin: 0;
+      size: A4;
+    }
+    body::before, body::after { display: none !important; }
+  }
+`}
+</style>
 
       <div className="min-h-screen bg-zinc-900 flex flex-col
                       items-center justify-center px-4 py-12">
@@ -114,13 +120,8 @@ export default function QRPage() {
         >
           🖨️ Print this QR Code
         </button>
-
-        {/* Back link */}
-        
-          href="/"
-          className="no-print mt-4 text-zinc-600 hover:text-zinc-400
-                     text-sm transition-colors"
-        <a>
+       {/* Back link */}
+        <a href="/" className="no-print mt-4 text-zinc-600 hover:text-zinc-400 text-sm transition-colors">
           ← Back to check-in
         </a>
 
