@@ -120,7 +120,7 @@ export default function QRPage() {
           href="/"
           className="no-print mt-4 text-zinc-600 hover:text-zinc-400
                      text-sm transition-colors"
-        >
+        <a>
           ← Back to check-in
         </a>
 
