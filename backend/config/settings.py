@@ -122,3 +122,8 @@ LOGGING = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+AT_USERNAME  = config('AT_USERNAME', default='sandbox')
+AT_API_KEY   = config('AT_API_KEY', default='')
+AT_SENDER_ID = config('AT_SENDER_ID', default='')

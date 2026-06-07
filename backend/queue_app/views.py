@@ -20,47 +20,29 @@ from .services import (
 # We define this here so every view can call it after mutating the queue.
 # Full implementation in Phase 4 — safe no-op for now.
 # ---------------------------------------------------------------------------
-def broadcast_entry(token: str):
-    """Push an update to a specific customer's wait room channel."""
-    import asyncio
-    from .consumers import broadcast_entry_update
-
-    try:
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                asyncio.ensure_future(broadcast_entry_update(str(token)))
-            else:
-                loop.run_until_complete(broadcast_entry_update(str(token)))
-        except RuntimeError:
-            asyncio.run(broadcast_entry_update(str(token)))
-    except Exception as e:
-        print(f"[WebSocket] Entry broadcast failed: {e}")
-
 def broadcast_queue_update():
     """
-    Synchronous wrapper around the async broadcast_queue coroutine.
-    Called from Django REST views (which are synchronous).
-    Uses asyncio to safely run the async function.
+    Synchronous wrapper that safely runs the async broadcast
+    inside Daphne's already-running event loop.
     """
-    import asyncio
+    from asgiref.sync import async_to_sync
     from .consumers import broadcast_queue
-
     try:
-        # Get the current event loop if one is running, otherwise create one
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # We're inside an async context (e.g. during tests)
-                # Schedule as a task instead
-                asyncio.ensure_future(broadcast_queue())
-            else:
-                loop.run_until_complete(broadcast_queue())
-        except RuntimeError:
-            asyncio.run(broadcast_queue())
+        async_to_sync(broadcast_queue)()
     except Exception as e:
-        # Never let a failed broadcast crash an API response
         print(f"[WebSocket] Broadcast failed: {e}")
+
+
+def broadcast_entry(token: str):
+    """
+    Push an update to a specific customer's wait room channel.
+    """
+    from asgiref.sync import async_to_sync
+    from .consumers import broadcast_entry_update
+    try:
+        async_to_sync(broadcast_entry_update)(str(token))
+    except Exception as e:
+        print(f"[WebSocket] Entry broadcast failed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -293,70 +275,72 @@ class NoShowView(APIView):
         except Barber.DoesNotExist:
             return Response({'error': 'Barber not found.'}, status=404)
 
-        current = barber.current_customer
-        if not current:
+        try:
+            with transaction.atomic():
+                current = barber.current_customer
+                if not current:
+                    return Response(
+                        {'error': 'No customer currently in service.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                new_entry = handle_no_show(current)
+                next_entry = get_next_waiting_entry(barber)
+
+                if not next_entry:
+                    barber.status = 'available'
+                    barber.save()
+                    transaction.on_commit(broadcast_queue_update)
+                    return Response({
+                        'message': f"{current.customer_name} marked as no-show. Queue is now empty.",
+                        'requeued': new_entry is not None,
+                    })
+
+                next_entry.status = 'in_service'
+                next_entry.called_at = timezone.now()
+                next_entry.service_started_at = timezone.now()
+                next_entry.save()
+
+                barber.status = 'busy'
+                barber.save()
+
+                from .sms import send_your_turn_sms
+                send_your_turn_sms(next_entry)
+                next_entry.sms_sent_your_turn = True
+                next_entry.save()
+
+                new_second = QueueEntry.objects.filter(
+                    barber=barber,
+                    status='waiting'
+                ).order_by('checked_in_at').first()
+
+                if new_second:
+                    check_and_send_position_sms(new_second)
+
+                transaction.on_commit(broadcast_queue_update)
+                transaction.on_commit(lambda: broadcast_entry(current.token))
+                if new_entry:
+                    transaction.on_commit(lambda: broadcast_entry(new_entry.token))
+                transaction.on_commit(lambda: broadcast_entry(next_entry.token))
+
+                return Response({
+                    'message': (
+                        f"{current.customer_name} marked as no-show. "
+                        f"Now calling {next_entry.customer_name}."
+                    ),
+                    'requeued': new_entry is not None,
+                    'now_serving': QueueEntrySerializer(next_entry).data,
+                })
+
+        except Exception as e:
+            # Log the real error so we can see it in Railway logs
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"NoShow error: {str(e)}", exc_info=True)
             return Response(
-                {'error': 'No customer currently in service.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': f'Something went wrong: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-        # Handle the no-show (re-queue or cancel)
-        new_entry = handle_no_show(current)
-
-        # Auto-call the next customer
-        next_entry = get_next_waiting_entry(barber)
-
-        if not next_entry:
-            barber.status = 'available'
-            barber.save()
-            # Broadcast after commit so new entry is visible
-            transaction.on_commit(broadcast_queue_update)
-            return Response({
-                'message': f"{current.customer_name} marked as no-show. Queue is now empty.",
-                'requeued': new_entry is not None,
-            })
-
-        # Call the next customer
-        next_entry.status = 'in_service'
-        next_entry.called_at = timezone.now()
-        next_entry.service_started_at = timezone.now()
-        next_entry.save()
-
-        barber.status = 'busy'
-        barber.save()
-
-        from .sms import send_your_turn_sms
-        send_your_turn_sms(next_entry)
-        next_entry.sms_sent_your_turn = True
-        next_entry.save()
-
-        # Check new 2nd in line
-        new_second = QueueEntry.objects.filter(
-            barber=barber,
-            status='waiting'
-        ).order_by('checked_in_at').first()
-
-        if new_second:
-            check_and_send_position_sms(new_second)
-
-        # Broadcast after commit so re-queued entry is visible
-        transaction.on_commit(broadcast_queue_update)
-
-        # Notify affected customers via their private channels
-        broadcast_entry(current.token)
-        if new_entry:
-            broadcast_entry(new_entry.token)
-        broadcast_entry(next_entry.token)
-
-        return Response({
-            'message': (
-                f"{current.customer_name} marked as no-show. "
-                f"Now calling {next_entry.customer_name}."
-            ),
-            'requeued': new_entry is not None,
-            'now_serving': QueueEntrySerializer(next_entry).data,
-        })
-
 
 # ---------------------------------------------------------------------------
 # BARBER DASHBOARD: Off Duty
