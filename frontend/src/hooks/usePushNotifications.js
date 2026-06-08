@@ -72,3 +72,8 @@ export function usePushNotifications(token) {
 
   return { permission, subscribed, subscribe }
 }
+
+export function usePushNotifications(token) {
+  console.log('[Push] VAPID_PUBLIC_KEY:', VAPID_PUBLIC_KEY)
+  console.log('[Push] Key length:', VAPID_PUBLIC_KEY?.length)
+}
