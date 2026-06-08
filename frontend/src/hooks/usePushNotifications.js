@@ -19,7 +19,7 @@ export function usePushNotifications(token) {
 
     try {
       // Register Firebase service worker
-      const registration = await navigator.serviceWorker.register('/sw.js')
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
       console.log('[Push] Service worker registered')
 
       // Request permission
