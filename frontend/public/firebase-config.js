@@ -1,6 +1,0 @@
-self.VITE_FIREBASE_API_KEY             = 'AIzaSyCl9rj8qWHaj8WWaGMrt-uvsGJGJ9pi_Cw'
-self.VITE_FIREBASE_AUTH_DOMAIN         = 'thequeue-barbershop.firebaseapp.com'
-self.VITE_FIREBASE_PROJECT_ID          = 'thequeue-barbershop'
-self.VITE_FIREBASE_STORAGE_BUCKET      = 'thequeue-barbershop.firebasestorage.app'
-self.VITE_FIREBASE_MESSAGING_SENDER_ID = '301709557527'
-self.VITE_FIREBASE_APP_ID              = '1:301709557527:web:3690b9a8b2d75dd4aac152'
