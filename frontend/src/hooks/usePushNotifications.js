@@ -63,17 +63,18 @@ export function usePushNotifications(token) {
     }
   }
 
+  
+
   // Auto-subscribe when token is available and permission not yet decided
   useEffect(() => {
     if (token && permission === 'default') {
       subscribe()
     }
   }, [token])
-
+  
+  console.log('[Push] VAPID_PUBLIC_KEY:', VAPID_PUBLIC_KEY)
+  console.log('[Push] Key length:', VAPID_PUBLIC_KEY?.length)
+ 
   return { permission, subscribed, subscribe }
 }
 
-export function usePushNotifications(token) {
-  console.log('[Push] VAPID_PUBLIC_KEY:', VAPID_PUBLIC_KEY)
-  console.log('[Push] Key length:', VAPID_PUBLIC_KEY?.length)
-}
