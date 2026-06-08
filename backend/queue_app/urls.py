@@ -10,4 +10,5 @@ urlpatterns = [
     path('barber/<int:barber_id>/noshow/', views.NoShowView.as_view(), name='no-show'),
     path('barber/<int:barber_id>/offduty/', views.OffDutyView.as_view(), name='off-duty'),
     path('barber/<int:barber_id>/onduty/', views.OnDutyView.as_view(), name='on-duty'),
+    path('push/subscribe/', views.SavePushSubscriptionView.as_view(), name='push-subscribe'),
 ]

@@ -101,6 +101,9 @@ def handle_no_show(entry):
         sms_sent_your_turn=False,
     )
 
+    from .push_notifications import push_requeued
+    push_requeued(new_entry)
+
     return new_entry
 
 
@@ -142,13 +145,8 @@ def reassign_barbers_queue(barber):
 
 
 def check_and_send_position_sms(entry):
-    """
-    Checks if this entry is now 2nd in line or 1st (their turn).
-    Triggers SMS if conditions are met and SMS hasn't been sent yet.
-    Imported and called after any queue mutation.
-    """
-    # Avoid circular import — SMS module imported here
     from .sms import send_second_in_line_sms, send_your_turn_sms
+    from .push_notifications import push_second_in_line, push_your_turn
 
     if entry.status != 'waiting':
         return
@@ -157,6 +155,11 @@ def check_and_send_position_sms(entry):
 
     if position == 2 and not entry.sms_sent_second_in_line:
         send_second_in_line_sms(entry)
+        push_second_in_line(entry)  # ← push alongside SMS
 
     if position == 1 and not entry.sms_sent_your_turn:
         send_your_turn_sms(entry)
+        push_your_turn(entry)       # ← push alongside SMS
+
+
+

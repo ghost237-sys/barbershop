@@ -412,3 +412,39 @@ class OnDutyView(APIView):
         broadcast_queue_update()
 
         return Response({'message': f"{barber.name} is back on duty and available."})
+    
+class SavePushSubscriptionView(APIView):
+    """
+    POST /api/push/subscribe/
+    Called by the frontend after the customer grants
+    notification permission. Saves their push subscription
+    linked to their queue entry token.
+    """
+    def post(self, request):
+        token        = request.data.get('token')
+        endpoint     = request.data.get('endpoint')
+        p256dh       = request.data.get('p256dh')
+        auth         = request.data.get('auth')
+
+        if not all([token, endpoint, p256dh, auth]):
+            return Response(
+                {'error': 'Missing required fields.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            entry = QueueEntry.objects.get(token=token)
+        except QueueEntry.DoesNotExist:
+            return Response({'error': 'Queue entry not found.'}, status=404)
+
+        from .models import PushSubscription
+        PushSubscription.objects.update_or_create(
+            queue_entry=entry,
+            defaults={
+                'endpoint': endpoint,
+                'p256dh':   p256dh,
+                'auth':     auth,
+            }
+        )
+
+        return Response({'message': 'Push subscription saved.'})

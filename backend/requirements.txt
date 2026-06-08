@@ -58,3 +58,4 @@ channels-redis==3.4.1
 daphne==3.0.2
 redis==4.6.0
 django-cors-headers
+pywebpush

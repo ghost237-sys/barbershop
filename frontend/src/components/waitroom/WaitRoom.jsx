@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useEntrySocket } from '../../hooks/useEntrySocket'
 import ConnectionBadge from '../shared/ConnectionBadge'
 import LoadingSpinner from '../shared/LoadingSpinner'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 
 // What to show for each queue status
 const STATUS_CONFIG = {
@@ -41,8 +42,8 @@ const STATUS_CONFIG = {
 
 export default function WaitRoom({ token, checkInData, onLeave, onRequeue }) {
   const { entryData, connected, usingFallback } = useEntrySocket(token)
+  const { permission, subscribed, subscribe } = usePushNotifications(token)
 
-  // Use WebSocket data if available, otherwise fall back to initial check-in response
   const entry = entryData || checkInData
   const config = entry ? STATUS_CONFIG[entry.status] : null
 
@@ -94,6 +95,8 @@ useEffect(() => {
   const isCalled     = entry.status === 'in_service'
   const isCompleted  = entry.status === 'completed'
   const isCancelled  = ['cancelled', 'no_show'].includes(entry.status)
+
+  
 
   return (
     <div className="flex flex-col items-center gap-6 py-4">
@@ -151,6 +154,39 @@ useEffect(() => {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Notification permission prompt — shown if not yet decided */}
+      {permission === 'default' && (
+        <div className="w-full rounded-2xl border border-amber-400/30
+                        bg-amber-400/5 px-5 py-4">
+          <p className="text-amber-400 font-semibold text-sm">
+            🔔 Get notified when it's your turn
+          </p>
+          <p className="text-zinc-400 text-xs mt-1">
+            Pokea arifa ukiwa nje ya duka
+          </p>
+          <button
+            onClick={subscribe}
+            className="mt-3 bg-amber-400 text-zinc-900 font-bold
+                       px-4 py-2 rounded-xl text-sm w-full"
+          >
+            Allow Notifications — Ruhusu Arifa
+          </button>
+        </div>
+      )}
+
+      {/* Subscribed confirmation */}
+      {subscribed && permission === 'granted' && (
+        <div className="w-full rounded-2xl border border-emerald-400/30
+                        bg-emerald-400/5 px-5 py-3 text-center">
+          <p className="text-emerald-400 text-sm font-medium">
+            🔔 Notifications on — we'll buzz you when it's time
+          </p>
+          <p className="text-zinc-500 text-xs mt-0.5">
+            Utapata arifa hata ukiwa nje
+          </p>
+        </div>
         )}
 
         {/* Called — big prompt to walk to the chair */}
@@ -230,3 +266,4 @@ useEffect(() => {
     </div>
   )
 }
+

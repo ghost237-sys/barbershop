@@ -127,3 +127,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AT_USERNAME  = config('AT_USERNAME', default='sandbox')
 AT_API_KEY   = config('AT_API_KEY', default='')
 AT_SENDER_ID = config('AT_SENDER_ID', default='')
+
+
+VAPID_PUBLIC_KEY  = config('VAPID_PUBLIC_KEY', default='')
+VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='')
+VAPID_EMAIL       = config('VAPID_EMAIL', default='mailto:admin@thequeue.co.ke')
