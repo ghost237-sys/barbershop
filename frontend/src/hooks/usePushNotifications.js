@@ -38,6 +38,8 @@ export function usePushNotifications(token) {
         console.log('[Push] Permission denied')
         return
       }
+       console.log('[Push] Attempting subscription with key:', VAPID_PUBLIC_KEY.substring(0, 20) + '...')
+       console.log('[Push] Service worker registration:', registration)
 
       // Subscribe to push service
       const subscription = await registration.pushManager.subscribe({
@@ -59,9 +61,19 @@ export function usePushNotifications(token) {
       console.log('[Push] Subscribed successfully')
 
     } catch (err) {
-      console.error('[Push] Subscription failed:', err)
-    }
+  console.error('[Push] Subscription failed:', err.name, err.message)
+  
+  // Log more detail
+  if (err.name === 'AbortError') {
+    console.error('[Push] AbortError usually means FCM is unreachable or VAPID key format is wrong')
   }
+  if (err.name === 'NotAllowedError') {
+    console.error('[Push] User denied permission')
+  }
+  if (err.name === 'InvalidStateError') {
+    console.error('[Push] Service worker not ready yet')
+  }
+}
 
   
 
@@ -77,4 +89,4 @@ export function usePushNotifications(token) {
  
   return { permission, subscribed, subscribe }
 }
-
+}
