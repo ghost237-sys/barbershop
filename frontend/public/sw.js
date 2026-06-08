@@ -1,28 +1,42 @@
-// Service Worker — handles push notifications when app is in background
+// Import Firebase scripts for background message handling
+importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js')
+importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js')
+importScripts('/firebase-config.js')
+importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js')
+importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js')
+// ... rest of sw.js unchanged
 
-self.addEventListener('push', event => {
-  const data = event.data ? event.data.json() : {}
 
-  const title   = data.title || '💈 The Queue'
-  const options = {
-    body:    data.body || 'Queue update',
-    icon:    data.icon || '/favicon.ico',
-    badge:   '/favicon.ico',
-    vibrate: [200, 100, 200],  // buzz pattern on Android
-    tag:     'queue-notification',  // replaces previous notification
-    renotify: true,
-    data:    { url: self.registration.scope }
-  }
-
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  )
+// Must match your firebaseConfig exactly
+firebase.initializeApp({
+  apiKey:            self.VITE_FIREBASE_API_KEY || '',
+  authDomain:        self.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId:         self.VITE_FIREBASE_PROJECT_ID || '',
+  storageBucket:     self.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: self.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId:             self.VITE_FIREBASE_APP_ID || '',
 })
 
-// When customer taps the notification — open the app
+const messaging = firebase.messaging()
+
+// Handle background messages
+messaging.onBackgroundMessage(payload => {
+  console.log('[SW] Background message received:', payload)
+
+  const { title, body } = payload.notification
+
+  self.registration.showNotification(title, {
+    body,
+    icon:     '/favicon.ico',
+    badge:    '/favicon.ico',
+    vibrate:  [200, 100, 200],
+    tag:      'queue-notification',
+    renotify: true,
+  })
+})
+
+// Open app when notification is tapped
 self.addEventListener('notificationclick', event => {
   event.notification.close()
-  event.waitUntil(
-    clients.openWindow(event.data?.url || '/')
-  )
+  event.waitUntil(clients.openWindow('/'))
 })

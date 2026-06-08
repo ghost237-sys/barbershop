@@ -221,19 +221,16 @@ class QueueEntry(models.Model):
 
 class PushSubscription(models.Model):
     """
-    Stores the browser push subscription for a queue entry.
+    Stores the FCM registration token for a queue entry.
     Created when the customer grants notification permission.
-    Deleted when the queue entry is completed or cancelled.
     """
     queue_entry = models.OneToOneField(
         QueueEntry,
         on_delete=models.CASCADE,
         related_name='push_subscription'
     )
-    endpoint    = models.TextField()
-    p256dh      = models.TextField()  # encryption key
-    auth        = models.TextField()  # auth secret
-    created_at  = models.DateTimeField(auto_now_add=True)
+    fcm_token  = models.TextField()  # Firebase registration token
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Push sub for {self.queue_entry.customer_name}"

@@ -1,101 +1,84 @@
 import { useState, useEffect } from 'react'
+import { messaging, getToken, onMessage } from '../firebase'
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || ''
-
-// Converts the VAPID public key from base64 to Uint8Array
-// Required format for the Push API
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4)
-  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData = window.atob(base64)
-  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)))
-}
+const API_BASE       = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api'
+const FIREBASE_VAPID = import.meta.env.VITE_FIREBASE_VAPID_KEY || ''
 
 export function usePushNotifications(token) {
-  const [permission, setPermission] = useState(
+  const [permission, setPermission]   = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   )
-  const [subscribed, setSubscribed] = useState(false)
+  const [subscribed, setSubscribed]   = useState(false)
 
   const subscribe = async () => {
-    // Check browser support
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('[Push] Not supported in this browser')
+    if (!('serviceWorker' in navigator)) {
+      console.warn('[Push] Service workers not supported')
       return
     }
 
     try {
-      // Register service worker
+      // Register Firebase service worker
       const registration = await navigator.serviceWorker.register('/sw.js')
+      console.log('[Push] Service worker registered')
 
-      // Only request permission if not already decided
-      let currentPermission = Notification.permission
-      if (currentPermission === 'default') {
-        currentPermission = await Notification.requestPermission()
-        setPermission(currentPermission)
-      }
+      // Request permission
+      const result = await Notification.requestPermission()
+      setPermission(result)
 
-      if (currentPermission !== 'granted') {
+      if (result !== 'granted') {
         console.log('[Push] Permission denied')
         return
       }
 
-      console.log('[Push] Subscribing...')
+      console.log('[Push] Getting FCM token...')
 
-      // Subscribe to push service
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly:      true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      // Get FCM registration token
+      const fcmToken = await getToken(messaging, {
+        vapidKey:            FIREBASE_VAPID,
+        serviceWorkerRegistration: registration,
       })
 
-      console.log('[Push] Got subscription:', subscription.endpoint)
+      if (!fcmToken) {
+        console.warn('[Push] No FCM token received')
+        return
+      }
 
-      const subJson = subscription.toJSON()
+      console.log('[Push] Got FCM token:', fcmToken.substring(0, 20) + '...')
 
-      // Save subscription to backend linked to this queue entry token
+      // Save to backend
       await axios.post(`${API_BASE}/push/subscribe/`, {
-        token,
-        endpoint: subJson.endpoint,
-        p256dh:   subJson.keys.p256dh,
-        auth:     subJson.keys.auth,
+        token,      // queue entry token
+        fcm_token:  fcmToken,
       })
 
       setSubscribed(true)
       console.log('[Push] Subscribed successfully')
 
+      // Handle foreground messages (app is open)
+      onMessage(messaging, payload => {
+        console.log('[Push] Foreground message:', payload)
+        // Show a browser notification even when app is open
+        if (Notification.permission === 'granted') {
+          new Notification(payload.notification.title, {
+            body:    payload.notification.body,
+            icon:    '/favicon.ico',
+            vibrate: [200, 100, 200],
+          })
+        }
+      })
+
     } catch (err) {
-      console.error('[Push] Subscription failed:', err.name, err.message)
-
-      if (err.name === 'AbortError') {
-        console.error('[Push] FCM unreachable or VAPID key format wrong')
-      }
-      if (err.name === 'NotAllowedError') {
-        console.error('[Push] User denied permission')
-      }
-      if (err.name === 'InvalidStateError') {
-        console.error('[Push] Service worker not ready yet')
-      }
+      console.error('[Push] Failed:', err.name, err.message)
     }
-  }  // ← subscribe() closes here
+  }
 
-  // Auto-subscribe when token is available
-  // Handles both 'default' (not yet asked) and 'granted' (already allowed)
   useEffect(() => {
     if (!token) return
-
-    console.log('[Push] useEffect fired — token:', token, 'permission:', permission)
-
     if (permission === 'default' || permission === 'granted') {
       subscribe()
     }
   }, [token])
 
-  console.log('[Push] VAPID_PUBLIC_KEY:', VAPID_PUBLIC_KEY)
-  console.log('[Push] Key length:', VAPID_PUBLIC_KEY?.length)
-  console.log('[Push] Current permission:', permission)
-  console.log('[Push] Token:', token)
-
   return { permission, subscribed, subscribe }
-}  // ← usePushNotifications closes here
+}

@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config
 import dj_database_url
+import json
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -132,3 +133,14 @@ AT_SENDER_ID = config('AT_SENDER_ID', default='')
 VAPID_PUBLIC_KEY  = config('VAPID_PUBLIC_KEY', default='')
 VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='')
 VAPID_EMAIL       = config('VAPID_EMAIL', default='mailto:admin@thequeue.co.ke')
+
+
+FCM_SERVER_KEY    = config('FCM_SERVER_KEY', default='')
+FIREBASE_VAPID_KEY = config('FIREBASE_VAPID_KEY', default='')
+
+# Parse the Firebase credentials JSON
+FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS', default='{}')
+try:
+    FIREBASE_CREDENTIALS = json.loads(FIREBASE_CREDENTIALS_JSON)
+except json.JSONDecodeError:
+    FIREBASE_CREDENTIALS = {}

@@ -414,19 +414,11 @@ class OnDutyView(APIView):
         return Response({'message': f"{barber.name} is back on duty and available."})
     
 class SavePushSubscriptionView(APIView):
-    """
-    POST /api/push/subscribe/
-    Called by the frontend after the customer grants
-    notification permission. Saves their push subscription
-    linked to their queue entry token.
-    """
     def post(self, request):
-        token        = request.data.get('token')
-        endpoint     = request.data.get('endpoint')
-        p256dh       = request.data.get('p256dh')
-        auth         = request.data.get('auth')
+        token     = request.data.get('token')      # queue entry token
+        fcm_token = request.data.get('fcm_token')  # Firebase token
 
-        if not all([token, endpoint, p256dh, auth]):
+        if not all([token, fcm_token]):
             return Response(
                 {'error': 'Missing required fields.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -440,11 +432,7 @@ class SavePushSubscriptionView(APIView):
         from .models import PushSubscription
         PushSubscription.objects.update_or_create(
             queue_entry=entry,
-            defaults={
-                'endpoint': endpoint,
-                'p256dh':   p256dh,
-                'auth':     auth,
-            }
+            defaults={'fcm_token': fcm_token}
         )
 
         return Response({'message': 'Push subscription saved.'})
