@@ -41,6 +41,7 @@ const STATUS_CONFIG = {
 
 
 export default function WaitRoom({ token, checkInData, onLeave, onRequeue }) {
+  console.log('[WaitRoom] token:', token)
   const { entryData, connected, usingFallback } = useEntrySocket(token)
   const { permission, subscribed, subscribe } = usePushNotifications(token)
 
