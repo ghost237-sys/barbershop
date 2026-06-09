@@ -3,14 +3,16 @@ import { useEffect, useState } from 'react'
 import BarberDashboard from '../components/dashboard/BarberDashboard'
 
 export default function BarberDashboardPage() {
-  const { barberId } = useParams()
+  const { barberId }                    = useParams()
   const [installPrompt, setInstallPrompt] = useState(null)
 
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const handler = (e) => {
       e.preventDefault()
       setInstallPrompt(e)
-    })
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
   const handleInstall = async () => {
@@ -23,7 +25,6 @@ export default function BarberDashboardPage() {
     <div className="min-h-screen bg-zinc-900 text-white">
       <div className="max-w-md mx-auto px-4 py-6 pb-24">
 
-        {/* Install banner for barbers */}
         {installPrompt && (
           <div className="mb-4 w-full rounded-2xl border border-amber-400/30
                           bg-amber-400/5 px-4 py-3
