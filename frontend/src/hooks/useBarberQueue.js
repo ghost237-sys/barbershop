@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useQueueSocket } from './useQueueSocket'
+import { useMemo, useEffect, useRef } from 'react'
 
 /**
  * Filters the full queue WebSocket data down to one barber's view.
