@@ -8,6 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
+      strategies: 'generateSW',
       manifest: {
         name: 'The Queue — Barbershop',
         short_name: 'The Queue',
@@ -16,6 +17,7 @@ export default defineConfig({
         background_color: '#18181b',
         display: 'standalone',
         start_url: '/',
+        orientation: 'portrait',
         icons: [
           {
             src: '/icon-192.png',
@@ -32,22 +34,20 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Cache the wait room page for offline access
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/barbershop-production-4c89\.up\.railway\.app\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 300 }
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 300
+              }
             }
           }
         ]
-      },
-      // Use our existing Firebase service worker for push
-      strategies: 'injectManifest',
-      srcDir: 'public',
-      filename: 'firebase-messaging-sw.js',
+      }
     })
   ],
   build: {
