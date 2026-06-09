@@ -71,9 +71,50 @@ export default function CheckInPage() {
     )
   }
 
+  const [installPrompt, setInstallPrompt] = useState(null)
+const [showInstallBanner, setShowInstallBanner] = useState(false)
+
+useEffect(() => {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    setInstallPrompt(e)
+    setShowInstallBanner(true)
+  })
+}, [])
+
+const handleInstall = async () => {
+  if (!installPrompt) return
+  installPrompt.prompt()
+  const result = await installPrompt.userChoice
+  if (result.outcome === 'accepted') {
+    setShowInstallBanner(false)
+  }
+}
+
   return (
     <div className="min-h-screen bg-zinc-900 text-white">
       <div className="max-w-md mx-auto px-4 py-8">
+      {showInstallBanner && (
+        <div className="w-full rounded-2xl border border-amber-400/30
+                bg-amber-400/5 px-4 py-3 mb-4
+                  flex items-center justify-between gap-3">
+    <div>
+      <p className="text-amber-400 text-sm font-semibold">
+        📲 Add to Home Screen
+      </p>
+      <p className="text-zinc-500 text-xs">
+        Get notified even when browser is closed
+      </p>
+    </div>
+    <button
+      onClick={handleInstall}
+      className="bg-amber-400 text-zinc-900 font-bold
+                 px-3 py-1.5 rounded-xl text-sm flex-shrink-0"
+    >
+      Install
+    </button>
+  </div>
+)}
 
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">💈</div>

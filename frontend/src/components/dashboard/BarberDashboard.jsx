@@ -6,6 +6,7 @@ import CurrentCustomerCard from './CurrentCustomerCard'
 import ActionButtons from './ActionButtons'
 import WaitingList from './WaitingList'
 import LoadingSpinner from '../shared/LoadingSpinner'
+import { useQueueAlerts } from '../../hooks/useQueueAlerts'
 
 export default function BarberDashboard({ barberId }) {
   const { barberData, connected, usingFallback } = useBarberQueue(barberId)
@@ -16,6 +17,15 @@ export default function BarberDashboard({ barberId }) {
   }
 
   const { barber, currentCustomer, waitingList } = barberData
+
+  // Add this inside BarberDashboard, after getting barberData:
+  const needsAttention = (
+    barberData?.currentCustomer &&
+    barberData?.waitingList.length > 0 &&
+    barberData?.barber.status !== 'off_duty'
+  )
+// Add useQueueAlerts hook
+    useQueueAlerts(barberData)
 
   // Wrapper so errors surface on the dashboard without crashing
   const handleAction = async (fn) => {
@@ -30,6 +40,19 @@ export default function BarberDashboard({ barberId }) {
 
   return (
     <div className="flex flex-col gap-5">
+
+      {/* Attention banner — pulses when people are waiting */}
+{needsAttention && (
+  <div className="w-full rounded-2xl bg-amber-400 px-5 py-4
+                  text-center animate-bounce">
+    <p className="text-zinc-900 font-black text-xl">
+      👆 {barberData.waitingList.length} customer{barberData.waitingList.length > 1 ? 's' : ''} waiting!
+    </p>
+    <p className="text-zinc-900/70 font-semibold">
+      Press Next Customer to call them
+    </p>
+  </div>
+)}
 
       {/* Header: barber name + status + connection */}
       <BarberHeader
