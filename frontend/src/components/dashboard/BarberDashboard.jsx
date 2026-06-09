@@ -15,18 +15,18 @@ export default function BarberDashboard({ barberId }) {
   // ── ALL hooks must be called before any conditional return ──
   useQueueAlerts(barberData)
 
-  const needsAttention = (
-    !barberData?.currentCustomer &&
-    barberData?.waitingList?.length > 0 &&
-    barberData?.barber?.status !== 'off_duty'
-  )
-
   // ── Now safe to do conditional return ──
   if (!barberData) {
     return <LoadingSpinner message="Loading your dashboard..." />
   }
 
   const { barber, currentCustomer, waitingList } = barberData
+
+   const needsAttention = (
+    !currentCustomer &&
+    waitingList.length > 0 &&
+    barber.status !== 'off_duty'
+  )
 
   const handleAction = async (fn) => {
     setActionError(null)
