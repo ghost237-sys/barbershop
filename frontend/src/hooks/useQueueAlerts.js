@@ -4,22 +4,29 @@ let audioCtx = null
 
 function getAudioContext() {
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+    } catch (e) {
+      return null
+    }
   }
-  // Resume if suspended — required after user gesture
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume()
-  }
+  if (audioCtx.state === 'suspended') audioCtx.resume()
   return audioCtx
+}
+
+// Resume on user gesture
+if (typeof window !== 'undefined') {
+  const resume = () => { if (audioCtx) audioCtx.resume() }
+  window.addEventListener('touchstart', resume)
+  window.addEventListener('click', resume)
 }
 
 function playChime() {
   try {
     const ctx = getAudioContext()
-    const frequencies = [523, 659, 784]
-
-    frequencies.forEach((freq, i) => {
-      const osc  = ctx.createOscillator()
+    if (!ctx) return
+    ;[523, 659, 784].forEach((freq, i) => {
+      const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.connect(gain)
       gain.connect(ctx.destination)
@@ -31,15 +38,16 @@ function playChime() {
       osc.start(t)
       osc.stop(t + 0.5)
     })
-  } catch (err) {
-    console.warn('[Alert] Could not play chime:', err.message)
+  } catch (e) {
+    console.warn('[Alert] Chime failed:', e.message)
   }
 }
 
 function playBeep() {
   try {
     const ctx = getAudioContext()
-    const osc  = ctx.createOscillator()
+    if (!ctx) return
+    const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
     gain.connect(ctx.destination)
@@ -49,56 +57,43 @@ function playBeep() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
     osc.start(ctx.currentTime)
     osc.stop(ctx.currentTime + 0.3)
-  } catch (err) {
-    console.warn('[Alert] Could not play beep:', err.message)
+  } catch (e) {
+    console.warn('[Alert] Beep failed:', e.message)
   }
-}
-
-// Resume AudioContext on first user interaction
-// This satisfies Chrome's autoplay policy
-if (typeof window !== 'undefined') {
-  const resumeAudio = () => {
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume()
-    }
-  }
-  window.addEventListener('touchstart', resumeAudio, { once: false })
-  window.addEventListener('click', resumeAudio, { once: false })
 }
 
 export function useQueueAlerts(barberData) {
-  const prevWaitingCountRef = useRef(null)
-  const prevCurrentRef      = useRef(null)
+  const prevCountRef   = useRef(null)
+  const prevCurrentRef = useRef(null)
 
   useEffect(() => {
-    // Guard — barberData not ready yet
+    // Single guard at the top — if null, do nothing
     if (!barberData) return
 
-    const currentCount   = barberData.waitingList?.length ?? 0
-    const currentServing = barberData.currentCustomer?.id ?? null
+    const count   = barberData.waitingList?.length ?? 0
+    const serving = barberData.currentCustomer?.id ?? null
 
-    // First load — record baseline without alerting
-    if (prevWaitingCountRef.current === null) {
-      prevWaitingCountRef.current = currentCount
-      prevCurrentRef.current      = currentServing
+    if (prevCountRef.current === null) {
+      prevCountRef.current   = count
+      prevCurrentRef.current = serving
       return
     }
 
-    // New customer joined
-    if (currentCount > prevWaitingCountRef.current) {
+    if (count > prevCountRef.current) {
       playChime()
     }
 
-    // Current customer changed and queue not empty
-    if (
-      currentServing !== prevCurrentRef.current &&
-      currentCount > 0
-    ) {
-      setTimeout(() => playBeep(), 500)
+    if (serving !== prevCurrentRef.current && count > 0) {
+      setTimeout(playBeep, 500)
     }
 
-    prevWaitingCountRef.current = currentCount
-    prevCurrentRef.current      = currentServing
+    prevCountRef.current   = count
+    prevCurrentRef.current = serving
 
-  }, [barberData?.waitingList?.length, barberData?.currentCustomer?.id])
+  // Safe dependency array — optional chaining returns undefined not error
+  }, [
+    barberData,
+    barberData?.waitingList?.length,
+    barberData?.currentCustomer?.id,
+  ])
 }
