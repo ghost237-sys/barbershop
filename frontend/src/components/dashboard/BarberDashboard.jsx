@@ -1,33 +1,33 @@
 import { useState } from 'react'
 import { useBarberQueue } from '../../hooks/useBarberQueue'
+import { useQueueAlerts } from '../../hooks/useQueueAlerts'
 import { barberNext, barberNoShow, barberOffDuty, barberOnDuty } from '../../api/queue'
 import BarberHeader from './BarberHeader'
 import CurrentCustomerCard from './CurrentCustomerCard'
 import ActionButtons from './ActionButtons'
 import WaitingList from './WaitingList'
 import LoadingSpinner from '../shared/LoadingSpinner'
-import { useQueueAlerts } from '../../hooks/useQueueAlerts'
 
 export default function BarberDashboard({ barberId }) {
   const { barberData, connected, usingFallback } = useBarberQueue(barberId)
   const [actionError, setActionError] = useState(null)
 
+  // ── ALL hooks must be called before any conditional return ──
+  useQueueAlerts(barberData)
+
+  const needsAttention = (
+    !barberData?.currentCustomer &&
+    barberData?.waitingList?.length > 0 &&
+    barberData?.barber?.status !== 'off_duty'
+  )
+
+  // ── Now safe to do conditional return ──
   if (!barberData) {
     return <LoadingSpinner message="Loading your dashboard..." />
   }
 
   const { barber, currentCustomer, waitingList } = barberData
 
-  // Add this inside BarberDashboard, after getting barberData:
-  const needsAttention = (
-    barberData?.currentCustomer &&
-    barberData?.waitingList.length > 0 &&
-    barberData?.barber.status !== 'off_duty'
-  )
-// Add useQueueAlerts hook
-    useQueueAlerts(barberData)
-
-  // Wrapper so errors surface on the dashboard without crashing
   const handleAction = async (fn) => {
     setActionError(null)
     try {
@@ -41,20 +41,6 @@ export default function BarberDashboard({ barberId }) {
   return (
     <div className="flex flex-col gap-5">
 
-      {/* Attention banner — pulses when people are waiting */}
-{needsAttention && (
-  <div className="w-full rounded-2xl bg-amber-400 px-5 py-4
-                  text-center animate-bounce">
-    <p className="text-zinc-900 font-black text-xl">
-      👆 {barberData.waitingList.length} customer{barberData.waitingList.length > 1 ? 's' : ''} waiting!
-    </p>
-    <p className="text-zinc-900/70 font-semibold">
-      Press Next Customer to call them
-    </p>
-  </div>
-)}
-
-      {/* Header: barber name + status + connection */}
       <BarberHeader
         barber={barber}
         connected={connected}
@@ -99,10 +85,21 @@ export default function BarberDashboard({ barberId }) {
         ))}
       </div>
 
-      {/* Currently serving card */}
       <CurrentCustomerCard entry={currentCustomer} />
 
-      {/* Action error */}
+      {/* Attention banner */}
+      {needsAttention && (
+        <div className="w-full rounded-2xl bg-amber-400 px-5 py-4
+                        text-center animate-bounce">
+          <p className="text-zinc-900 font-black text-xl">
+            👆 {waitingList.length} customer{waitingList.length > 1 ? 's' : ''} waiting!
+          </p>
+          <p className="text-zinc-900/70 font-semibold">
+            Press Next Customer to call them
+          </p>
+        </div>
+      )}
+
       {actionError && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-xl
                         px-4 py-3 text-sm text-red-400 text-center">
@@ -110,18 +107,17 @@ export default function BarberDashboard({ barberId }) {
         </div>
       )}
 
-      {/* Action buttons */}
       <ActionButtons
         barberId={barberId}
         hasCurrentCustomer={!!currentCustomer}
         isOffDuty={barber.status === 'off_duty'}
+        waitingCount={waitingList.length}
         onNext={() => handleAction(() => barberNext(barberId))}
         onNoShow={() => handleAction(() => barberNoShow(barberId))}
         onOffDuty={() => handleAction(() => barberOffDuty(barberId))}
         onOnDuty={() => handleAction(() => barberOnDuty(barberId))}
       />
 
-      {/* Divider */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-zinc-800" />
         <p className="text-xs text-zinc-600 uppercase tracking-wider">
@@ -130,7 +126,6 @@ export default function BarberDashboard({ barberId }) {
         <div className="flex-1 h-px bg-zinc-800" />
       </div>
 
-      {/* Waiting list */}
       <WaitingList entries={waitingList} />
 
     </div>
