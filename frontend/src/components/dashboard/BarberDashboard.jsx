@@ -12,23 +12,25 @@ export default function BarberDashboard({ barberId }) {
   const { barberData, connected, usingFallback } = useBarberQueue(barberId)
   const [actionError, setActionError] = useState(null)
 
-  const { barber, currentCustomer, waitingList } = barberData
-
-  // ── ALL hooks must be called before any conditional return ──
+  // Hooks must all be before any conditional return
   useQueueAlerts(barberData)
 
-  // ── Now safe to do conditional return ──
+  // Safe conditional return
   if (!barberData) {
     return <LoadingSpinner message="Loading your dashboard..." />
   }
 
-  
+  // barberData is guaranteed non-null below this line
+  const { barber, currentCustomer, waitingList } = barberData
 
-   const needsAttention = (
+  // needsAttention uses destructured values — safe here
+  const needsAttention = (
     !currentCustomer &&
     waitingList.length > 0 &&
     barber.status !== 'off_duty'
   )
+
+  // ... rest of component unchanged
 
   const handleAction = async (fn) => {
     setActionError(null)
