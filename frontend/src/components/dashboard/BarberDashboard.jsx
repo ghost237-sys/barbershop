@@ -12,6 +12,8 @@ export default function BarberDashboard({ barberId }) {
   const { barberData, connected, usingFallback } = useBarberQueue(barberId)
   const [actionError, setActionError] = useState(null)
 
+  const { barber, currentCustomer, waitingList } = barberData
+
   // ── ALL hooks must be called before any conditional return ──
   useQueueAlerts(barberData)
 
@@ -20,7 +22,7 @@ export default function BarberDashboard({ barberId }) {
     return <LoadingSpinner message="Loading your dashboard..." />
   }
 
-  const { barber, currentCustomer, waitingList } = barberData
+  
 
    const needsAttention = (
     !currentCustomer &&
