@@ -1,55 +1,69 @@
 import { useEffect, useRef } from 'react'
 
-// Generates a pleasant chime sound using Web Audio API
-// No external audio files needed
+let audioCtx = null
+
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+  }
+  // Resume if suspended — required after user gesture
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume()
+  }
+  return audioCtx
+}
+
 function playChime() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-
-    const frequencies = [523, 659, 784]  // C, E, G — a pleasant chord
+    const ctx = getAudioContext()
+    const frequencies = [523, 659, 784]
 
     frequencies.forEach((freq, i) => {
-      const oscillator = ctx.createOscillator()
-      const gainNode   = ctx.createGain()
-
-      oscillator.connect(gainNode)
-      gainNode.connect(ctx.destination)
-
-      oscillator.frequency.value = freq
-      oscillator.type = 'sine'
-
-      const startTime = ctx.currentTime + i * 0.15
-      gainNode.gain.setValueAtTime(0.3, startTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5)
-
-      oscillator.start(startTime)
-      oscillator.stop(startTime + 0.5)
+      const osc  = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      const t = ctx.currentTime + i * 0.15
+      gain.gain.setValueAtTime(0.3, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
+      osc.start(t)
+      osc.stop(t + 0.5)
     })
   } catch (err) {
-    console.warn('[Alert] Could not play sound:', err)
+    console.warn('[Alert] Could not play chime:', err.message)
   }
 }
 
-function playUrgentBeep() {
+function playBeep() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const oscillator = ctx.createOscillator()
-    const gainNode   = ctx.createGain()
-
-    oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
-
-    oscillator.frequency.value = 880
-    oscillator.type = 'square'
-
-    gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
-
-    oscillator.start(ctx.currentTime)
-    oscillator.stop(ctx.currentTime + 0.3)
+    const ctx = getAudioContext()
+    const osc  = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = 880
+    osc.type = 'square'
+    gain.gain.setValueAtTime(0.3, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 0.3)
   } catch (err) {
-    console.warn('[Alert] Could not play beep:', err)
+    console.warn('[Alert] Could not play beep:', err.message)
   }
+}
+
+// Resume AudioContext on first user interaction
+// This satisfies Chrome's autoplay policy
+if (typeof window !== 'undefined') {
+  const resumeAudio = () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume()
+    }
+  }
+  window.addEventListener('touchstart', resumeAudio, { once: false })
+  window.addEventListener('click', resumeAudio, { once: false })
 }
 
 export function useQueueAlerts(barberData) {
@@ -57,36 +71,34 @@ export function useQueueAlerts(barberData) {
   const prevCurrentRef      = useRef(null)
 
   useEffect(() => {
+    // Guard — barberData not ready yet
     if (!barberData) return
 
-    const currentCount   = barberData.waitingList.length
-    const currentServing = barberData.currentCustomer?.id
+    const currentCount   = barberData.waitingList?.length ?? 0
+    const currentServing = barberData.currentCustomer?.id ?? null
 
-    // First load — just record state
+    // First load — record baseline without alerting
     if (prevWaitingCountRef.current === null) {
       prevWaitingCountRef.current = currentCount
       prevCurrentRef.current      = currentServing
       return
     }
 
-    // New customer joined the queue
+    // New customer joined
     if (currentCount > prevWaitingCountRef.current) {
       playChime()
-      console.log('[Alert] New customer in queue — chime played')
     }
 
-    // Current customer changed — barber pressed Next
-    // Play a reminder if queue is not empty
+    // Current customer changed and queue not empty
     if (
       currentServing !== prevCurrentRef.current &&
       currentCount > 0
     ) {
-      // Small delay then remind barber there are people waiting
-      setTimeout(() => playUrgentBeep(), 500)
+      setTimeout(() => playBeep(), 500)
     }
 
     prevWaitingCountRef.current = currentCount
     prevCurrentRef.current      = currentServing
 
-  }, [barberData?.waitingList.length, barberData?.currentCustomer?.id])
+  }, [barberData?.waitingList?.length, barberData?.currentCustomer?.id])
 }

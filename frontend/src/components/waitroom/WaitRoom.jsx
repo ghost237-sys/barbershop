@@ -250,19 +250,19 @@ useEffect(() => {
 
       {/* Freedom note — reassures customer they can leave */}
       {isWaiting && (
-        <div className="w-full rounded-2xl bg-zinc-800/40 border border-zinc-700/50
-                        px-5 py-4 text-center">
-          <p className="text-sm text-zinc-400">
-            📱 You'll get an SMS when you're next.
-          </p>
-          <p className="text-xs text-zinc-500 mt-1">
-            Utapata ujumbe wa SMS utakapokuwa wa pili.
-          </p>
-          <p className="text-xs text-zinc-600 mt-2">
-            You don't have to wait inside the shop.
-          </p>
-        </div>
-      )}
+  <div className="w-full rounded-2xl bg-zinc-800/40 border border-zinc-700/50
+                  px-5 py-4 text-center">
+    <p className="text-sm text-zinc-400">
+      🔔 You will be notified when it is your turn.
+    </p>
+    <p className="text-xs text-zinc-500 mt-1">
+      Utajulishwa ukifika zamu yako.
+    </p>
+    <p className="text-xs text-zinc-600 mt-2">
+      You don't have to wait inside the shop.
+    </p>
+  </div>
+)}
 
     </div>
   )
