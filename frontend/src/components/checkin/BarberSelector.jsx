@@ -55,7 +55,7 @@ export default function BarberSelector({ selectedId, onSelect }) {
     <div className="flex flex-col items-center gap-3 py-8">
       <div className="w-10 h-10 border-4 border-zinc-700 border-t-amber-400
                       rounded-full animate-spin" />
-      <p className="text-zinc-400 text-sm text-center">Loading barbers...</p>
+      <p className="text-zinc-400 text-sm text-center">Loading technicians...</p>
       {/* Show this message after 4 seconds so user knows it's a slow start */}
       <SlowStartMessage />
     </div>

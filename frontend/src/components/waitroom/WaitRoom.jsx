@@ -234,7 +234,7 @@ useEffect(() => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-zinc-500 uppercase tracking-wider">
-                Your Barber / Kinyozi Wako
+                Your technician / mhusika Wako
               </p>
               <p className="text-white font-semibold mt-0.5">
                 {entry.barber_name}

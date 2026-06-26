@@ -88,7 +88,7 @@ export default function CheckInForm({ onSuccess }) {
       {/* Preference Toggle */}
       <div>
         <label className="block text-sm font-medium text-zinc-400 mb-2">
-          Barber Preference
+          Technician Preference
         </label>
         <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-800 rounded-xl">
           <button
@@ -110,7 +110,7 @@ export default function CheckInForm({ onSuccess }) {
                 : 'text-zinc-400 hover:text-white'}`}
           >
             <span className="block text-xs font-bold">Mhusika</span>
-            <span className="block text-[10px] opacity-70">Specific Barber</span>
+            <span className="block text-[10px] opacity-70">Specific Technician</span>
           </button>
         </div>
       </div>
@@ -119,7 +119,7 @@ export default function CheckInForm({ onSuccess }) {
       {preference === 'specific_barber' && (
         <div>
           <label className="block text-sm font-medium text-zinc-400 mb-2">
-            Choose Your Barber
+            Choose Your Technician / Chagua Mhusika
           </label>
           <BarberSelector
             selectedId={barberId}

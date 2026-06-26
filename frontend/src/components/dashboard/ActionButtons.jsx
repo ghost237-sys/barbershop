@@ -103,7 +103,7 @@ export default function ActionButtons({
           </span>
         ) : (
           <>
-            <span className="block text-3xl mb-1">✂️</span>
+            <span className="block text-3xl mb-1">'💅  Next Client — Mfuatao'</span>
             <span className="block">
               {hasCurrentCustomer ? 'Next Customer' : 'Call First Customer'}
             </span>

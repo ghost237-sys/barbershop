@@ -115,9 +115,9 @@ export default function CheckInPage() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">💈</div>
-          <h1 className="text-2xl font-black tracking-tight">The Queue</h1>
-          <p className="text-zinc-500 text-sm mt-1">Barbershop Queue System</p>
+        <div className="text-4xl mb-2">💅</div>
+        <h1 className="text-2xl font-black tracking-tight">Abaah Nail Parlour</h1>
+        <p className="text-zinc-500 text-sm mt-1">Queue Management System</p>
         </div>
 
         {/* Content */}

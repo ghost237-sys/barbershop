@@ -32,8 +32,8 @@ export default function BarberDashboardPage() {
             <div>
               <p className="text-amber-400 text-sm font-bold">
                 📲 Install dashboard on your phone
-              </p>
-              <p className="text-zinc-500 text-xs">
+              </p>  
+                <p className="text-zinc-500 text-xs">
                 Faster access — works like a real app
               </p>
             </div>
