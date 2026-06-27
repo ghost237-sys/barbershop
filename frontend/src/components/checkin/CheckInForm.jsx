@@ -97,8 +97,8 @@ export default function CheckInForm({ onSuccess }) {
                 ? 'bg-pink-400 text-white shadow'
                 : 'text-rose-300/60 hover:text-white'}`}
           >
-            <span className="block text-xs font-bold">Anayepatikana</span>
-            <span className="block text-[10px] opacity-70">Next Available</span>
+            <span className="block text-xs font-bold">Next Available</span>
+            <span className="block text-[10px] opacity-60">Anayepatikana</span>
           </button>
           <button
             onClick={() => setPreference('specific_barber')}
@@ -107,8 +107,8 @@ export default function CheckInForm({ onSuccess }) {
                 ? 'bg-pink-400 text-white shadow'
                 : 'text-rose-300/60 hover:text-white'}`}
           >
-            <span className="block text-xs font-bold">Mhusika</span>
-            <span className="block text-[10px] opacity-70">Specific Technician</span>
+            <span className="block text-xs font-bold">Specific Technician</span>
+            <span className="block text-[10px] opacity-60">Mhusika</span>
           </button>
         </div>
       </div>
