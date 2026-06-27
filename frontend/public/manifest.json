@@ -1,11 +1,11 @@
 {
   "name": "Abaah Nail Parlour",
-  "short_name": "Abaah",
-  "description": "Skip the wait. Join the queue virtually.",
+  "short_name": "Abaah Nails",
+  "description": "Skip the wait. Join the queue at Abaah Nail Parlour.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#18181b",
-  "theme_color": "#f59e0b",
+  "background_color": "#4c0519",
+  "theme_color": "#ec4899",
   "orientation": "portrait",
   "icons": [
     {

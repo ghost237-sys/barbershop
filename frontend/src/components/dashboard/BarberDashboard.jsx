@@ -64,7 +64,7 @@ export default function BarberDashboard({ barberId }) {
             value: `${barber.estimated_wait_minutes}m`,
             label: 'Est. Wait',
             sublabel: 'Muda wa Kusubiri',
-            color: 'text-amber-400',
+            color: 'text-pink-400',
           },
           {
             value: currentCustomer ? '1' : '0',
@@ -75,7 +75,7 @@ export default function BarberDashboard({ barberId }) {
         ].map(stat => (
           <div
             key={stat.label}
-            className="bg-zinc-800/60 border border-zinc-700 rounded-xl
+            className="bg-rose-900/80/60 border border-rose-800/60 rounded-xl
                        px-3 py-3 text-center"
           >
             <p className={`text-2xl font-black tabular-nums ${stat.color}`}>
@@ -93,7 +93,7 @@ export default function BarberDashboard({ barberId }) {
 
       {/* Attention banner */}
       {needsAttention && (
-        <div className="w-full rounded-2xl bg-amber-400 px-5 py-4
+        <div className="w-full rounded-2xl bg-pink-400 px-5 py-4
                         text-center animate-bounce">
           <p className="text-zinc-900 font-black text-xl">
             👆 {waitingList.length} customer{waitingList.length > 1 ? 's' : ''} waiting!
@@ -123,11 +123,11 @@ export default function BarberDashboard({ barberId }) {
       />
 
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-zinc-800" />
+        <div className="flex-1 h-px bg-rose-900/80" />
         <p className="text-xs text-zinc-600 uppercase tracking-wider">
           Up Next — Watakaofuata
         </p>
-        <div className="flex-1 h-px bg-zinc-800" />
+        <div className="flex-1 h-px bg-rose-900/80" />
       </div>
 
       <WaitingList entries={waitingList} />

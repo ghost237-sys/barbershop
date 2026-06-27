@@ -8,8 +8,8 @@ const STATUS_CONFIG = {
   },
   busy: {
     label: 'Busy — Nahudumu',
-    dot: 'bg-amber-400 animate-pulse',
-    text: 'text-amber-400',
+    dot: 'bg-pink-400 animate-pulse',
+    text: 'text-pink-400',
   },
   off_duty: {
     label: 'Off Duty — Pumzika',

@@ -31,8 +31,8 @@ export default function ActionButtons({
   if (isOffDuty) {
     return (
       <div className="flex flex-col gap-3">
-        <div className="w-full rounded-2xl border border-dashed border-zinc-700
-                        bg-zinc-800/20 px-5 py-5 text-center">
+        <div className="w-full rounded-2xl border border-dashed border-rose-800/60
+                        bg-rose-900/80/20 px-5 py-5 text-center">
           <p className="text-zinc-400 font-semibold">You are off duty</p>
           <p className="text-zinc-600 text-sm mt-1">Uko nje ya zamu</p>
         </div>
@@ -43,7 +43,7 @@ export default function ActionButtons({
                      disabled:opacity-50 text-white font-black py-7 rounded-2xl
                      transition-all duration-200 text-xl shadow-lg shadow-emerald-500/20"
         >
-          {isLoading('onduty') ? '...' : "✅  I'm Back — Niko Tayari"}
+          {isLoading('onduty') ? '...' : "🌸  I\'m Back — Niko Tayari"}
         </button>
       </div>
     )
@@ -89,11 +89,11 @@ export default function ActionButtons({
       <button
         onClick={() => handleAction('next', onNext)}
         disabled={!!loadingAction}
-        className="w-full bg-amber-400 hover:bg-amber-300 active:scale-[0.97]
+        className="w-full bg-pink-400 hover:bg-pink-300 active:scale-[0.97]
                    disabled:opacity-50 text-zinc-900 font-black
                    py-8 rounded-2xl transition-all duration-200
-                   text-2xl shadow-xl shadow-amber-400/30
-                   border-b-4 border-amber-600"
+                   text-2xl shadow-xl shadow-pink-400/30
+                   border-b-4 border-pink-600"
       >
         {isLoading('next') ? (
           <span className="flex items-center justify-center gap-2">
@@ -137,7 +137,7 @@ export default function ActionButtons({
       <button
         onClick={() => setConfirmOffDuty(true)}
         disabled={!!loadingAction}
-        className="w-full bg-transparent border-2 border-zinc-700
+        className="w-full bg-transparent border-2 border-rose-800/60
                    hover:border-red-500/50 hover:text-red-400
                    active:scale-[0.97] disabled:opacity-50
                    text-zinc-500 font-semibold py-5 rounded-2xl

@@ -8,27 +8,27 @@ import { usePushNotifications } from '../../hooks/usePushNotifications'
 const STATUS_CONFIG = {
   waiting: {
     emoji: '⏳',
-    title: 'You\'re in the queue',
+    title: "You're in the queue",
     titleSw: 'Uko foleni',
-    color: 'text-amber-400',
+    color: 'text-pink-300',
   },
   in_service: {
-    emoji: '💈',
-    title: 'It\'s your turn!',
+    emoji: '💅',
+    title: "It's your turn!",
     titleSw: 'Ni zamu yako!',
     color: 'text-emerald-400',
   },
   completed: {
-    emoji: '✅',
-    title: 'All done!',
-    titleSw: 'Umekamilika!',
-    color: 'text-emerald-400',
+    emoji: '🌸',
+    title: 'All done! Thank you!',
+    titleSw: 'Umekamilika! Asante!',
+    color: 'text-pink-300',
   },
   no_show: {
     emoji: '🔄',
     title: 'Re-queued',
     titleSw: 'Umewekwa tena',
-    color: 'text-amber-400',
+    color: 'text-pink-300',
   },
   cancelled: {
     emoji: '❌',
@@ -112,7 +112,7 @@ useEffect(() => {
         w-full rounded-3xl border p-8 text-center
         ${isCalled
           ? 'border-emerald-400/50 bg-emerald-400/5 shadow-xl shadow-emerald-400/10'
-          : 'border-zinc-700 bg-zinc-800/60'
+          : 'border-rose-800/60 bg-rose-900/80/60'
         }
       `}>
         {/* Emoji */}
@@ -146,7 +146,7 @@ useEffect(() => {
 
             {/* Estimated wait */}
             <div className="text-center">
-              <p className="text-5xl font-black text-amber-400 tabular-nums">
+              <p className="text-5xl font-black text-pink-400 tabular-nums">
                 {entry.estimated_wait_minutes ?? '—'}
               </p>
               <p className="text-xs text-zinc-400 mt-1">
@@ -159,9 +159,9 @@ useEffect(() => {
 
         {/* Notification permission prompt — shown if not yet decided */}
       {permission === 'default' && (
-        <div className="w-full rounded-2xl border border-amber-400/30
-                        bg-amber-400/5 px-5 py-4">
-          <p className="text-amber-400 font-semibold text-sm">
+        <div className="w-full rounded-2xl border border-pink-400/30
+                        bg-pink-400/5 px-5 py-4">
+          <p className="text-pink-400 font-semibold text-sm">
             🔔 Get notified when it's your turn
           </p>
           <p className="text-zinc-400 text-xs mt-1">
@@ -169,7 +169,7 @@ useEffect(() => {
           </p>
           <button
             onClick={subscribe}
-            className="mt-3 bg-amber-400 text-zinc-900 font-bold
+            className="mt-3 bg-pink-400 text-zinc-900 font-bold
                        px-4 py-2 rounded-xl text-sm w-full"
           >
             Allow Notifications — Ruhusu Arifa
@@ -191,26 +191,30 @@ useEffect(() => {
         )}
 
         {/* Called — big prompt to walk to the chair */}
+        
         {isCalled && (
-          <div className="mt-6">
-            <p className="text-lg text-white font-semibold">
-              Please walk to {entry.barber_name}'s chair!
-            </p>
-            <p className="text-sm text-zinc-400 mt-1">
-              Tafadhali nenda kwa kiti cha {entry.barber_name}
-            </p>
-          </div>
-        )}
-
+        <div className="mt-6">
+        <p className="text-lg text-white font-semibold">
+            Please come to {entry.barber_name}'s station! 💅
+        </p>
+        <p className="text-sm text-rose-300/60 mt-1">
+            Tafadhali nenda kwa kituo cha {entry.barber_name}
+        </p>
+        </div>
+      )}
         {/* Completed */}
         {isCompleted && (
-          <div className="mt-6">
-            <p className="text-base text-zinc-300">
-              Thanks for visiting! See you next time.
-            </p>
-            <p className="text-sm text-zinc-500 mt-1">
-              Asante! Tutakuona wakati ujao.
-            </p>
+          <div className="mt-6 text-center">
+          <p className="text-3xl mb-2">🌸</p>
+          <p className="text-base text-rose-200/80">
+            Thank you for visiting Abaah Nail Parlour!
+          </p>
+          <p className="text-sm text-rose-300/50 mt-1">
+            Asante kwa kutembelea Abaah Nail Parlour!
+          </p>
+          <p className="text-xs text-rose-400/40 mt-2">
+            We look forward to seeing you again. 💅
+          </p>
           </div>
         )}
 
@@ -229,18 +233,18 @@ useEffect(() => {
 
       {/* Barber info */}
       {entry.barber_name && isWaiting && (
-        <div className="w-full rounded-2xl border border-zinc-700
-                        bg-zinc-800/40 px-5 py-4">
+        <div className="w-full rounded-2xl border border-rose-800/60
+                        bg-rose-900/80/40 px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">
-                Your technician / mhusika Wako
+              <p className="text-xs text-rose-300/50 uppercase tracking-wider">
+                  Your Technician / Teknisia Wako
               </p>
               <p className="text-white font-semibold mt-0.5">
                 {entry.barber_name}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-amber-400 flex items-center
+            <div className="w-10 h-10 rounded-full bg-pink-400 flex items-center
                             justify-center text-zinc-900 font-bold text-lg">
               {entry.barber_name.charAt(0)}
             </div>
@@ -250,21 +254,23 @@ useEffect(() => {
 
       {/* Freedom note — reassures customer they can leave */}
       {isWaiting && (
-  <div className="w-full rounded-2xl bg-zinc-800/40 border border-zinc-700/50
+  
+  <div className="w-full rounded-2xl bg-rose-900/30 border border-rose-800/40
                   px-5 py-4 text-center">
-    <p className="text-sm text-zinc-400">
+    <p className="text-sm text-rose-200/60">
       🔔 You will be notified when it is your turn.
     </p>
-    <p className="text-xs text-zinc-500 mt-1">
+    <p className="text-xs text-rose-300/40 mt-1">
       Utajulishwa ukifika zamu yako.
     </p>
-    <p className="text-xs text-zinc-600 mt-2">
-      You don't have to wait inside the shop.
+    <p className="text-xs text-rose-400/30 mt-2">
+      You don't have to wait inside the parlour.
+      <br />Huhitaji kusubiri ndani.
     </p>
   </div>
 )}
+  </div>
+)}
 
-    </div>
-  )
-}
+
 

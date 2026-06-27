@@ -14,8 +14,8 @@ export default function ConnectionBadge({ connected, usingFallback }) {
   if (usingFallback) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs
-                       text-amber-400 font-medium">
-        <span className="w-2 h-2 rounded-full bg-amber-400" />
+                       text-pink-400 font-medium">
+        <span className="w-2 h-2 rounded-full bg-pink-400" />
         Syncing...
       </span>
     )

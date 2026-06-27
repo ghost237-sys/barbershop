@@ -25,7 +25,7 @@ export default function WaitingList({ entries }) {
               flex items-center gap-3 px-4 py-3 rounded-xl transition-all
               ${isNext
                 ? 'bg-zinc-700/80 border border-zinc-600'
-                : 'bg-zinc-800/40 border border-zinc-800'
+                : 'bg-rose-900/80/40 border border-zinc-800'
               }
             `}
           >
@@ -34,7 +34,7 @@ export default function WaitingList({ entries }) {
               w-8 h-8 rounded-full flex items-center justify-center
               text-sm font-bold flex-shrink-0
               ${isNext
-                ? 'bg-amber-400 text-zinc-900'
+                ? 'bg-pink-400 text-zinc-900'
                 : 'bg-zinc-700 text-zinc-400'
               }
             `}>
@@ -47,7 +47,7 @@ export default function WaitingList({ entries }) {
                 ${isNext ? 'text-white' : 'text-zinc-300'}`}>
                 {entry.customer_name}
                 {isNext && (
-                  <span className="ml-2 text-xs font-normal text-amber-400">
+                  <span className="ml-2 text-xs font-normal text-pink-400">
                     — UP NEXT
                   </span>
                 )}
@@ -60,7 +60,7 @@ export default function WaitingList({ entries }) {
             {/* Wait time */}
             <div className="text-right flex-shrink-0">
               <p className={`text-sm font-bold tabular-nums
-                ${isNext ? 'text-amber-400' : 'text-zinc-400'}`}>
+                ${isNext ? 'text-pink-400' : 'text-zinc-400'}`}>
                 ~{entry.estimated_wait_minutes}m
               </p>
               <p className="text-xs text-zinc-600">
