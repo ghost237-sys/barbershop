@@ -31,10 +31,10 @@ export default function ActionButtons({
   if (isOffDuty) {
     return (
       <div className="flex flex-col gap-3">
-        <div className="w-full rounded-2xl border border-dashed border-rose-800/60
-                        bg-rose-900/80/20 px-5 py-5 text-center">
-          <p className="text-zinc-400 font-semibold">You are off duty</p>
-          <p className="text-zinc-600 text-sm mt-1">Uko nje ya zamu</p>
+        <div className="w-full rounded-2xl border border-dashed border-zinc-700
+                        bg-zinc-800/20 px-5 py-5 text-center">
+          <p className="text-zinc-500 font-medium">You are currently off duty</p>
+          <p className="text-zinc-600 text-xs mt-0.5">Uko nje ya zamu</p>
         </div>
         <button
           onClick={() => handleAction('onduty', onOnDuty)}
@@ -43,7 +43,10 @@ export default function ActionButtons({
                      disabled:opacity-50 text-white font-black py-7 rounded-2xl
                      transition-all duration-200 text-xl shadow-lg shadow-emerald-500/20"
         >
-          {isLoading('onduty') ? '...' : "🌸  I\'m Back — Niko Tayari"}
+          {isLoading('onduty') ? '...' : "✅  I'm Back"}
+          <span className="block text-sm font-normal opacity-60 mt-0.5">
+            Niko Tayari
+          </span>
         </button>
       </div>
     )
@@ -56,7 +59,11 @@ export default function ActionButtons({
                         bg-red-500/5 px-5 py-5 text-center">
           <p className="text-red-400 font-bold text-lg">Going off duty?</p>
           <p className="text-zinc-400 text-sm mt-2">
-            Your {waitingCount} waiting customers will be reassigned.
+            Your {waitingCount} waiting clients will be reassigned
+            to other technicians.
+          </p>
+          <p className="text-zinc-600 text-xs mt-1">
+            Wateja wako watahamishiwa kwa teknisia mwingine.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -72,10 +79,11 @@ export default function ActionButtons({
               setConfirmOffDuty(false)
               handleAction('offduty', onOffDuty)
             }}
+            disabled={!!loadingAction}
             className="bg-red-500 hover:bg-red-400 text-white font-bold
-                       py-5 rounded-2xl transition-all text-lg"
+                       py-5 rounded-2xl transition-all text-lg disabled:opacity-50"
           >
-            Confirm
+            {isLoading('offduty') ? '...' : 'Confirm'}
           </button>
         </div>
       </div>
@@ -85,41 +93,41 @@ export default function ActionButtons({
   return (
     <div className="flex flex-col gap-4">
 
-      {/* NEXT CUSTOMER — huge, impossible to miss */}
+      {/* Next Client — primary action */}
       <button
         onClick={() => handleAction('next', onNext)}
         disabled={!!loadingAction}
-        className="w-full bg-pink-400 hover:bg-pink-300 active:scale-[0.97]
-                   disabled:opacity-50 text-zinc-900 font-black
+        className="w-full bg-pink-500 hover:bg-pink-400 active:scale-[0.97]
+                   disabled:opacity-50 text-white font-black
                    py-8 rounded-2xl transition-all duration-200
-                   text-2xl shadow-xl shadow-pink-400/30
-                   border-b-4 border-pink-600"
+                   text-2xl shadow-xl shadow-pink-500/20
+                   border-b-4 border-pink-700"
       >
         {isLoading('next') ? (
           <span className="flex items-center justify-center gap-2">
-            <span className="w-6 h-6 border-3 border-zinc-900/30 border-t-zinc-900
+            <span className="w-6 h-6 border-3 border-white/30 border-t-white
                              rounded-full animate-spin" />
             Calling...
           </span>
         ) : (
           <>
-            <span className="block text-3xl mb-1">'💅  Next Client — Mfuatao'</span>
+            <span className="block text-3xl mb-1">💅</span>
             <span className="block">
-              {hasCurrentCustomer ? 'Next Customer' : 'Call First Customer'}
+              {hasCurrentCustomer ? 'Next Client' : 'Call First Client'}
             </span>
-            <span className="block text-lg font-bold opacity-70">
+            <span className="block text-base font-normal opacity-70 mt-0.5">
               {hasCurrentCustomer ? 'Mfuatao' : 'Mwanzo'}
             </span>
             {waitingCount > 0 && (
-              <span className="block text-base font-semibold mt-1 opacity-80">
-                {waitingCount} waiting · {waitingCount} wanaosubiri
+              <span className="block text-sm font-semibold mt-1 opacity-80">
+                {waitingCount} waiting
               </span>
             )}
           </>
         )}
       </button>
 
-      {/* NO SHOW */}
+      {/* No Show */}
       <button
         onClick={() => handleAction('noshow', onNoShow)}
         disabled={!!loadingAction || !hasCurrentCustomer}
@@ -130,20 +138,24 @@ export default function ActionButtons({
                    border-b-4 border-zinc-800"
       >
         <span className="block text-2xl mb-1">✗</span>
-        <span className="block">No Show — Hakuja</span>
+        <span className="block">No Show</span>
+        <span className="block text-sm font-normal opacity-50 mt-0.5">
+          Hakuja
+        </span>
       </button>
 
-      {/* OFF DUTY */}
+      {/* Off Duty */}
       <button
         onClick={() => setConfirmOffDuty(true)}
         disabled={!!loadingAction}
-        className="w-full bg-transparent border-2 border-rose-800/60
+        className="w-full bg-transparent border-2 border-zinc-700
                    hover:border-red-500/50 hover:text-red-400
                    active:scale-[0.97] disabled:opacity-50
                    text-zinc-500 font-semibold py-5 rounded-2xl
                    transition-all duration-200 text-base"
       >
-        ⏸  Off Duty — Pumzika
+        ⏸  Off Duty
+        <span className="text-xs opacity-50 ml-1">— Pumzika</span>
       </button>
 
     </div>

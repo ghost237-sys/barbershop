@@ -4,13 +4,12 @@ import ConnectionBadge from '../shared/ConnectionBadge'
 import LoadingSpinner from '../shared/LoadingSpinner'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 
-// What to show for each queue status
 const STATUS_CONFIG = {
   waiting: {
     emoji: '⏳',
     title: "You're in the queue",
     titleSw: 'Uko foleni',
-    color: 'text-pink-300',
+    color: 'text-pink-400',
   },
   in_service: {
     emoji: '💅',
@@ -22,13 +21,13 @@ const STATUS_CONFIG = {
     emoji: '🌸',
     title: 'All done! Thank you!',
     titleSw: 'Umekamilika! Asante!',
-    color: 'text-pink-300',
+    color: 'text-pink-400',
   },
   no_show: {
     emoji: '🔄',
     title: 'Re-queued',
     titleSw: 'Umewekwa tena',
-    color: 'text-pink-300',
+    color: 'text-pink-400',
   },
   cancelled: {
     emoji: '❌',
@@ -38,239 +37,203 @@ const STATUS_CONFIG = {
   },
 }
 
-
-
 export default function WaitRoom({ token, checkInData, onLeave, onRequeue }) {
-  console.log('[WaitRoom] token:', token)
   const { entryData, connected, usingFallback } = useEntrySocket(token)
-  const { permission, subscribed, subscribe } = usePushNotifications(token)
+  const { permission, subscribed, subscribe }   = usePushNotifications(token)
 
-  const entry = entryData || checkInData
+  console.log('[WaitRoom] token:', token)
+
+  const entry  = entryData || checkInData
   const config = entry ? STATUS_CONFIG[entry.status] : null
 
-  // Add this inside WaitRoom, after the useEntrySocket line:
-  // Watches for terminal statuses — clears token and returns to check-in
-useEffect(() => {
-  if (!entry) return
-
-  // no_show is only terminal if there's no replacement entry
-  // If requeued_as_token exists, the requeue useEffect handles it instead
-  const isTerminal = (
-    (entry.status === 'completed') ||
-    (entry.status === 'cancelled') ||
-    (entry.status === 'no_show' && !entry.requeued_as_token)
-  )
-
-  if (isTerminal) {
-    const timer = setTimeout(() => {
-      onLeave?.()
-    }, 5000)
-    return () => clearTimeout(timer)
-  }
-}, [entry?.status, entry?.requeued_as_token])
-
-// Watches for re-queue — switches to new token immediately
-useEffect(() => {
-  if (!entry) return
-  if (entry.status === 'no_show' && entry.requeued_as_token) {
-    onRequeue?.(entry.requeued_as_token)
-  }
-}, [entry?.status, entry?.requeued_as_token])
-
-
+  // Clear token on terminal statuses
   useEffect(() => {
-  if (!entry) return
+    if (!entry) return
+    const isTerminal = (
+      entry.status === 'completed' ||
+      entry.status === 'cancelled' ||
+      (entry.status === 'no_show' && !entry.requeued_as_token)
+    )
+    if (isTerminal) {
+      const timer = setTimeout(() => onLeave?.(), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [entry?.status, entry?.requeued_as_token])
 
-  // If this entry was marked no_show and has a replacement entry,
-  // automatically switch the wait room to track the new entry
-  if (entry.status === 'no_show' && entry.requeued_as_token) {
-    onRequeue?.(entry.requeued_as_token)
-  }
-}, [entry?.status, entry?.requeued_as_token])
+  // Follow re-queue to new token
+  useEffect(() => {
+    if (!entry) return
+    if (entry.status === 'no_show' && entry.requeued_as_token) {
+      onRequeue?.(entry.requeued_as_token)
+    }
+  }, [entry?.status, entry?.requeued_as_token])
 
-  if (!entry) {
-    return <LoadingSpinner message="Connecting to queue..." />
-  }
+  if (!entry) return <LoadingSpinner message="Connecting to queue..." />
 
-  const isWaiting    = entry.status === 'waiting'
-  const isCalled     = entry.status === 'in_service'
-  const isCompleted  = entry.status === 'completed'
-  const isCancelled  = ['cancelled', 'no_show'].includes(entry.status)
-
-  
+  const isWaiting   = entry.status === 'waiting'
+  const isCalled    = entry.status === 'in_service'
+  const isCompleted = entry.status === 'completed'
+  const isCancelled = ['cancelled', 'no_show'].includes(entry.status)
 
   return (
-    <div className="flex flex-col items-center gap-6 py-4">
+    <div className="flex flex-col items-center gap-5 py-4">
 
       {/* Connection status */}
       <div className="self-end">
         <ConnectionBadge connected={connected} usingFallback={usingFallback} />
       </div>
 
+      {/* Notification prompt */}
+      {permission === 'default' && (
+        <div className="w-full rounded-2xl border border-pink-500/30
+                        bg-pink-500/5 px-5 py-4">
+          <p className="text-pink-400 font-semibold text-sm">
+            🔔 Get notified when it's your turn
+          </p>
+          <p className="text-zinc-500 text-xs mt-1">
+            We'll send you a notification so you don't have to watch the screen.
+          </p>
+          <button
+            onClick={subscribe}
+            className="mt-3 bg-pink-500 text-white font-bold
+                       px-4 py-2 rounded-xl text-sm w-full"
+          >
+            Allow Notifications
+          </button>
+        </div>
+      )}
+
+      {subscribed && permission === 'granted' && (
+        <div className="w-full rounded-2xl border border-emerald-500/20
+                        bg-emerald-500/5 px-5 py-3 text-center">
+          <p className="text-emerald-400 text-sm font-medium">
+            🔔 Notifications on — we'll alert you when it's time
+          </p>
+        </div>
+      )}
+
       {/* Main status card */}
       <div className={`
         w-full rounded-3xl border p-8 text-center
         ${isCalled
-          ? 'border-emerald-400/50 bg-emerald-400/5 shadow-xl shadow-emerald-400/10'
-          : 'border-rose-800/60 bg-rose-900/80/60'
+          ? 'border-emerald-500/50 bg-emerald-500/5 shadow-xl shadow-emerald-500/10'
+          : 'border-zinc-700 bg-zinc-800/60'
         }
       `}>
-        {/* Emoji */}
-        <div className="text-6xl mb-4 animate-bounce-slow">
-          {config?.emoji}
-        </div>
+        <div className="text-6xl mb-4">{config?.emoji}</div>
 
-        {/* Status title */}
         <p className={`text-2xl font-bold ${config?.color}`}>
           {config?.title}
         </p>
-        <p className={`text-sm mt-0.5 ${config?.color} opacity-70`}>
+        <p className={`text-xs mt-1 ${config?.color} opacity-50`}>
           {config?.titleSw}
         </p>
 
-        {/* Position + wait — only shown while waiting */}
+        {/* Position + wait */}
         {isWaiting && (
           <div className="mt-6 flex items-center justify-center gap-8">
-            {/* Queue position */}
             <div className="text-center">
               <p className="text-5xl font-black text-white tabular-nums">
                 {entry.queue_position ?? '—'}
               </p>
-              <p className="text-xs text-zinc-400 mt-1">
-                Position<br />
-                <span className="text-zinc-500">Nafasi</span>
+              <p className="text-xs text-zinc-500 mt-1">
+                Position
+                <span className="block text-[10px] text-zinc-600">Nafasi</span>
               </p>
             </div>
 
             <div className="w-px h-12 bg-zinc-700" />
 
-            {/* Estimated wait */}
             <div className="text-center">
               <p className="text-5xl font-black text-pink-400 tabular-nums">
                 {entry.estimated_wait_minutes ?? '—'}
               </p>
-              <p className="text-xs text-zinc-400 mt-1">
-                Minutes<br />
-                <span className="text-zinc-500">Dakika</span>
+              <p className="text-xs text-zinc-500 mt-1">
+                Minutes
+                <span className="block text-[10px] text-zinc-600">Dakika</span>
               </p>
             </div>
           </div>
         )}
 
-        {/* Notification permission prompt — shown if not yet decided */}
-      {permission === 'default' && (
-        <div className="w-full rounded-2xl border border-pink-400/30
-                        bg-pink-400/5 px-5 py-4">
-          <p className="text-pink-400 font-semibold text-sm">
-            🔔 Get notified when it's your turn
-          </p>
-          <p className="text-zinc-400 text-xs mt-1">
-            Pokea arifa ukiwa nje ya duka
-          </p>
-          <button
-            onClick={subscribe}
-            className="mt-3 bg-pink-400 text-zinc-900 font-bold
-                       px-4 py-2 rounded-xl text-sm w-full"
-          >
-            Allow Notifications — Ruhusu Arifa
-          </button>
-        </div>
-      )}
-
-      {/* Subscribed confirmation */}
-      {subscribed && permission === 'granted' && (
-        <div className="w-full rounded-2xl border border-emerald-400/30
-                        bg-emerald-400/5 px-5 py-3 text-center">
-          <p className="text-emerald-400 text-sm font-medium">
-            🔔 Notifications on — we'll buzz you when it's time
-          </p>
-          <p className="text-zinc-500 text-xs mt-0.5">
-            Utapata arifa hata ukiwa nje
-          </p>
-        </div>
+        {/* Called */}
+        {isCalled && (
+          <div className="mt-6">
+            <p className="text-lg text-white font-semibold">
+              Please come to {entry.barber_name}'s station! 💅
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              Tafadhali nenda kwa kituo cha {entry.barber_name}
+            </p>
+          </div>
         )}
 
-        {/* Called — big prompt to walk to the chair */}
-        
-        {isCalled && (
-        <div className="mt-6">
-        <p className="text-lg text-white font-semibold">
-            Please come to {entry.barber_name}'s station! 💅
-        </p>
-        <p className="text-sm text-rose-300/60 mt-1">
-            Tafadhali nenda kwa kituo cha {entry.barber_name}
-        </p>
-        </div>
-      )}
         {/* Completed */}
         {isCompleted && (
-          <div className="mt-6 text-center">
-          <p className="text-3xl mb-2">🌸</p>
-          <p className="text-base text-rose-200/80">
-            Thank you for visiting Abaah Nail Parlour!
-          </p>
-          <p className="text-sm text-rose-300/50 mt-1">
-            Asante kwa kutembelea Abaah Nail Parlour!
-          </p>
-          <p className="text-xs text-rose-400/40 mt-2">
-            We look forward to seeing you again. 💅
-          </p>
+          <div className="mt-6">
+            <p className="text-base text-zinc-300">
+              Thank you for visiting Abaah Nail Parlour! 🌸
+            </p>
+            <p className="text-xs text-zinc-500 mt-1">
+              Asante kwa kutembelea Abaah Nail Parlour!
+            </p>
           </div>
         )}
 
         {/* Cancelled */}
         {isCancelled && (
           <div className="mt-6">
-            <p className="text-base text-zinc-300">
+            <p className="text-base text-zinc-400">
               You were removed from the queue.
             </p>
-            <p className="text-sm text-zinc-500 mt-1">
+            <p className="text-xs text-zinc-600 mt-1">
               Uliondolewa kwenye foleni.
             </p>
           </div>
         )}
       </div>
 
-      {/* Barber info */}
+      {/* Technician info */}
       {entry.barber_name && isWaiting && (
-        <div className="w-full rounded-2xl border border-rose-800/60
-                        bg-rose-900/80/40 px-5 py-4">
+        <div className="w-full rounded-2xl border border-zinc-700
+                        bg-zinc-800/40 px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-rose-300/50 uppercase tracking-wider">
-                  Your Technician / Teknisia Wako
+              <p className="text-xs text-zinc-500 uppercase tracking-wider">
+                Your Technician
+                <span className="block normal-case tracking-normal text-[10px]
+                                 text-zinc-600">
+                  Teknisia Wako
+                </span>
               </p>
-              <p className="text-white font-semibold mt-0.5">
+              <p className="text-white font-semibold mt-1">
                 {entry.barber_name}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-pink-400 flex items-center
-                            justify-center text-zinc-900 font-bold text-lg">
+            <div className="w-10 h-10 rounded-full bg-pink-500 flex items-center
+                            justify-center text-white font-bold text-lg">
               {entry.barber_name.charAt(0)}
             </div>
           </div>
         </div>
       )}
 
-      {/* Freedom note — reassures customer they can leave */}
+      {/* Freedom note */}
       {isWaiting && (
-  
-  <div className="w-full rounded-2xl bg-rose-900/30 border border-rose-800/40
-                  px-5 py-4 text-center">
-    <p className="text-sm text-rose-200/60">
-      🔔 You will be notified when it is your turn.
-    </p>
-    <p className="text-xs text-rose-300/40 mt-1">
-      Utajulishwa ukifika zamu yako.
-    </p>
-    <p className="text-xs text-rose-400/30 mt-2">
-      You don't have to wait inside the parlour.
-      <br />Huhitaji kusubiri ndani.
-    </p>
-  </div>
-)}
-  </div>
-)}
+        <div className="w-full rounded-2xl bg-zinc-800/40 border border-zinc-700/50
+                        px-5 py-4 text-center">
+          <p className="text-sm text-zinc-400">
+            🔔 You will be notified when it is your turn.
+          </p>
+          <p className="text-xs text-zinc-600 mt-1">
+            Utajulishwa ukifika zamu yako.
+          </p>
+          <p className="text-xs text-zinc-600 mt-2">
+            You don't have to wait inside the parlour.
+          </p>
+        </div>
+      )}
 
-
-
+    </div>
+  )
+}
